@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Inventory Parts</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📦 Inventory Parts</h2>
+        </div>
+
+        <!-- Add Part Form -->
+        <form id="addPartForm" onsubmit="handleAddPart(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Part Name *</label>
+                    <input type="text" id="part_name" placeholder="Synthetic Oil 5W-30" required>
+                </div>
+                <div class="form-group">
+                    <label>Part Number (SKU) *</label>
+                    <input type="text" id="part_number" placeholder="OIL-5W30-QT" required>
+                </div>
+                <div class="form-group">
+                    <label>Unit Price ($) *</label>
+                    <input type="number" step="0.01" id="part_price" placeholder="8.99" required>
+                </div>
+                <div class="form-group">
+                    <label>Stock Quantity *</label>
+                    <input type="number" id="part_stock" placeholder="25" required>
+                </div>
+                <div class="form-group">
+                    <label>Min Stock Alert Level</label>
+                    <input type="number" id="part_min_alert" placeholder="5" value="5">
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <button type="submit" class="btn">➕ Add Inventory Part</button>
+            </div>
+        </form>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div style="display:flex; gap:12px; flex-wrap:wrap; max-width:600px; width:100%;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search part name or part #..." onkeyup="if(event.key==='Enter') loadParts(1)" oninput="if(this.value==='') loadParts(1)">
+                    <button class="btn btn-outline" onclick="loadParts(1)">Search</button>
+                </div>
+                <button class="btn btn-outline" id="lowStockToggleBtn" onclick="toggleLowStockFilter()">⚠️ Show Low Stock Only</button>
+            </div>
+            <button class="btn btn-outline" onclick="loadParts(currentPage)">🔄 Refresh</button>
+        </div>
+
+        <!-- Parts Data Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Part #</th>
+                        <th>Name</th>
+                        <th>Unit Price</th>
+                        <th>Stock Qty</th>
+                        <th>Min Alert</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="partsTable">
+                    <tr><td colspan="7" class="empty-state">Loading inventory...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span id="paginationInfo" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline" id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button class="btn btn-outline" id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+let currentPage = 1;
+let totalPages = 1;
+let showLowStockOnly = false;
+let partsDataMap = {};
+
+async function loadParts(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+    const lowStockParam = showLowStockOnly ? '&lowStock=true' : '';
+
+    try {
+        const res = await API.get(`/api/parts?page=${page}&limit=10&search=${encodeURIComponent(search)}${lowStockParam}`);
+        const tbody = document.getElementById('partsTable');
+        
+        totalPages = res.pagination.totalPages || 1;
+        document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} total)`;
+        
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+        if (!res.data || res.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No inventory parts found</td></tr>`;
+            return;
+        }
+
+        partsDataMap = {};
+        res.data.forEach(p => { partsDataMap[p.part_id] = p; });
+
+        tbody.innerHTML = res.data.map(p => {
+            const isLow = p.stock_quantity <= p.min_stock_alert;
+            return `
+                <tr>
+                    <td>#${p.part_id}</td>
+                    <td><code class="vin-code">${escapeHTML(p.part_number)}</code></td>
+                    <td><strong>${escapeHTML(p.part_name)}</strong></td>
+                    <td>$${parseFloat(p.unit_price).toFixed(2)}</td>
+                    <td>
+                        <span class="badge ${isLow ? 'badge-danger' : 'badge-completed'}">
+                            ${p.stock_quantity} ${isLow ? '⚠️ LOW' : 'in stock'}
+                        </span>
+                    </td>
+                    <td>${p.min_stock_alert}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.part_id})">✏️ Edit Stock</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.part_id})">🗑 Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        Toast.error(err.message || 'Failed to load inventory');
+    }
+}
+
+async function handleAddPart(e) {
+    e.preventDefault();
+    const part_name = document.getElementById('part_name').value.trim();
+    const part_number = document.getElementById('part_number').value.trim();
+    const unit_price = document.getElementById('part_price').value.trim();
+    const stock_quantity = document.getElementById('part_stock').value.trim();
+    const min_stock_alert = document.getElementById('part_min_alert').value.trim();
+
+    try {
+        await API.post('/api/parts', { part_name, part_number, unit_price, stock_quantity, min_stock_alert });
+        Toast.success('Inventory part added!');
+        
+        document.getElementById('part_name').value = '';
+        document.getElementById('part_number').value = '';
+        document.getElementById('part_price').value = '';
+        document.getElementById('part_stock').value = '';
+
+        loadParts(1);
+    } catch (err) {
+        Toast.error(err.message || 'Failed to add part');
+    }
+}
+
+function toggleLowStockFilter() {
+    showLowStockOnly = !showLowStockOnly;
+    const btn = document.getElementById('lowStockToggleBtn');
+    btn.style.background = showLowStockOnly ? 'var(--primary)' : 'transparent';
+    btn.style.color = showLowStockOnly ? 'white' : 'var(--text-secondary)';
+    loadParts(1);
+}
+
+function openEditModal(id) {
+    const p = partsDataMap[id];
+    if (!p) return;
+
+    Modal.open({
+        title: `Edit Inventory Part #${id}`,
+        bodyHTML: `
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Part Name</label>
+                <input type="text" id="edit_part_name" value="${escapeHTML(p.part_name || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Part Number (SKU)</label>
+                <input type="text" id="edit_part_number" value="${escapeHTML(p.part_number || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Unit Price ($)</label>
+                <input type="number" step="0.01" id="edit_unit_price" value="${p.unit_price || 0}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Stock Quantity</label>
+                <input type="number" id="edit_stock_quantity" value="${p.stock_quantity || 0}">
+            </div>
+            <div class="form-group">
+                <label>Min Alert Threshold</label>
+                <input type="number" id="edit_min_alert" value="${p.min_stock_alert || 0}">
+            </div>
+        `,
+        onConfirm: async () => {
+            const editName = document.getElementById('edit_part_name').value.trim();
+            const editNumber = document.getElementById('edit_part_number').value.trim();
+            const editPrice = document.getElementById('edit_unit_price').value.trim();
+            const editStock = document.getElementById('edit_stock_quantity').value.trim();
+            const editMin = document.getElementById('edit_min_alert').value.trim();
+
+            try {
+                await API.put(`/api/parts/${id}`, {
+                    part_name: editName,
+                    part_number: editNumber,
+                    unit_price: editPrice,
+                    stock_quantity: editStock,
+                    min_stock_alert: editMin
+                });
+                Modal.close();
+                Toast.success('Inventory part updated');
+                loadParts(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Update failed');
+            }
+        }
+    });
+}
+
+function confirmDelete(id) {
+    Modal.confirm({
+        title: 'Delete Part',
+        message: 'Are you sure you want to delete this inventory part?',
+        onConfirm: async () => {
+            try {
+                await API.delete(`/api/parts/${id}`);
+                Toast.success('Part deleted');
+                loadParts(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Delete failed');
+            }
+        }
+    });
+}
+
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadParts(newPage);
+    }
+}
+
+function logout() {
+    API.logout();
+}
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function debounce(func, timeout = 300){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+window.onload = () => {
+    loadParts(1);
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.oninput = debounce(() => loadParts(1), 300);
+    }
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Operational Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .menu-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 24px 16px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+        .menu-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .menu-title { font-weight: 700; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Operational Dashboard Overview Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon">💰</div>
+            <div>
+                <div class="metric-value" id="statRevenue">$0.00</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">👤</div>
+            <div>
+                <div class="metric-value" id="statCustomers">0</div>
+                <div class="metric-label">Customers</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">🚗</div>
+            <div>
+                <div class="metric-value" id="statVehicles">0</div>
+                <div class="metric-label">Vehicles</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">🛠</div>
+            <div>
+                <div class="metric-value" id="statActiveJobs">0</div>
+                <div class="metric-label">Active Service Jobs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Module Navigation Menu -->
+    <div class="menu-grid">
+        <a href="customer.html" class="menu-card">
+            <div class="menu-icon">👤</div>
+            <div class="menu-title">Customers</div>
+        </a>
+
+        <a href="employee.html" class="menu-card">
+            <div class="menu-icon">👨‍🔧</div>
+            <div class="menu-title">Employees</div>
+        </a>
+
+        <a href="cars.html" class="menu-card">
+            <div class="menu-icon">🚗</div>
+            <div class="menu-title">Vehicles</div>
+        </a>
+
+        <a href="services.html" class="menu-card">
+            <div class="menu-icon">🛠</div>
+            <div class="menu-title">Service Jobs</div>
+        </a>
+
+        <a href="parts.html" class="menu-card">
+            <div class="menu-icon">📦</div>
+            <div class="menu-title">Inventory Parts</div>
+        </a>
+
+        <a href="analytics.html" class="menu-card">
+            <div class="menu-icon">📊</div>
+            <div class="menu-title">Financial Analytics</div>
+        </a>
+    </div>
+
+    <!-- Recent Services Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Service Jobs</h3>
+            <a href="services.html" class="btn btn-outline">View All Services</a>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Customer</th>
+                        <th>Vehicle Model</th>
+                        <th>Date</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentServicesTable">
+                    <tr><td colspan="6" class="empty-state">Loading stats...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+async function loadDashboard() {
+    try {
+        const res = await API.get('/api/dashboard/stats');
+        const s = res.stats;
+
+        document.getElementById('statRevenue').innerText = `$${parseFloat(s.totalRevenue).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        document.getElementById('statCustomers').innerText = s.totalCustomers;
+        document.getElementById('statVehicles').innerText = s.totalCars;
+        document.getElementById('statActiveJobs').innerText = s.activeJobs;
+
+        const tbody = document.getElementById('recentServicesTable');
+        if (!res.recentServices || res.recentServices.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No recent service jobs</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = res.recentServices.map(job => `
+            <tr>
+                <td>#${job.job_id}</td>
+                <td>${escapeHTML(job.customer_name || 'N/A')}</td>
+                <td>${escapeHTML(job.model || 'N/A')}</td>
+                <td>${new Date(job.job_date).toLocaleDateString()}</td>
+                <td>$${parseFloat(job.total_cost).toFixed(2)}</td>
+                <td>
+                    <span class="badge badge-${job.status === 'Completed' ? 'completed' : job.status === 'In Progress' ? 'progress' : 'pending'}">
+                        ${job.status}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        Toast.error(err.message || 'Error loading dashboard stats');
+    }
+}
+
+function logout() {
+    API.logout();
+}
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+window.onload = loadDashboard;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Employees</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">👨‍🔧 Employee Management</h2>
+        </div>
+
+        <!-- Add Employee Form -->
+        <form id="addEmployeeForm" onsubmit="handleAddEmployee(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="emp_name" placeholder="Alex Rivera" required>
+                </div>
+                <div class="form-group">
+                    <label>Role / Position *</label>
+                    <input type="text" id="emp_role" placeholder="Senior Mechanic" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="emp_phone" placeholder="555-0201">
+                </div>
+                <div class="form-group">
+                    <label>Annual Salary ($)</label>
+                    <input type="number" step="0.01" id="emp_salary" placeholder="65000">
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <button type="submit" class="btn">➕ Add Employee</button>
+            </div>
+        </form>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by name, role, phone..." onkeyup="if(event.key==='Enter') loadEmployees(1)" oninput="if(this.value==='') loadEmployees(1)">
+                <button class="btn btn-outline" onclick="loadEmployees(1)">Search</button>
+            </div>
+            <button class="btn btn-outline" onclick="loadEmployees(currentPage)">🔄 Refresh</button>
+        </div>
+
+        <!-- Employee Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th>Salary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTable">
+                    <tr><td colspan="6" class="empty-state">Loading employees...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span id="paginationInfo" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline" id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button class="btn btn-outline" id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+let currentPage = 1;
+let totalPages = 1;
+let employeeDataMap = {};
+
+async function loadEmployees(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+
+    try {
+        const res = await API.get(`/api/employees?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+        const tbody = document.getElementById('employeeTable');
+        
+        totalPages = res.pagination.totalPages || 1;
+        document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} total)`;
+        
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+        if (!res.data || res.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No employees found</td></tr>`;
+            return;
+        }
+
+        employeeDataMap = {};
+        res.data.forEach(e => { employeeDataMap[e.employee_id] = e; });
+
+        tbody.innerHTML = res.data.map(e => `
+            <tr>
+                <td>#${e.employee_id}</td>
+                <td><strong>${escapeHTML(e.name)}</strong></td>
+                <td><span class="badge badge-progress">${escapeHTML(e.role)}</span></td>
+                <td>${escapeHTML(e.phone || 'N/A')}</td>
+                <td>$${parseFloat(e.salary || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="openEditModal(${e.employee_id})">✏️ Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete(${e.employee_id})">🗑 Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        Toast.error(err.message || 'Failed to load employees');
+    }
+}
+
+async function handleAddEmployee(e) {
+    e.preventDefault();
+    const name = document.getElementById('emp_name').value.trim();
+    const role = document.getElementById('emp_role').value.trim();
+    const phone = document.getElementById('emp_phone').value.trim();
+    const salary = document.getElementById('emp_salary').value.trim();
+
+    try {
+        await API.post('/api/employees', { name, role, phone, salary });
+        Toast.success('Employee added successfully!');
+        
+        document.getElementById('emp_name').value = '';
+        document.getElementById('emp_role').value = '';
+        document.getElementById('emp_phone').value = '';
+        document.getElementById('emp_salary').value = '';
+
+        loadEmployees(1);
+    } catch (err) {
+        Toast.error(err.message || 'Failed to add employee');
+    }
+}
+
+function openEditModal(id) {
+    const e = employeeDataMap[id];
+    if (!e) return;
+
+    Modal.open({
+        title: `Edit Employee #${id}`,
+        bodyHTML: `
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Name</label>
+                <input type="text" id="edit_name" value="${escapeHTML(e.name || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Role</label>
+                <input type="text" id="edit_role" value="${escapeHTML(e.role || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Phone</label>
+                <input type="text" id="edit_phone" value="${escapeHTML(e.phone || '')}">
+            </div>
+            <div class="form-group">
+                <label>Salary ($)</label>
+                <input type="number" step="0.01" id="edit_salary" value="${e.salary || 0}">
+            </div>
+        `,
+        onConfirm: async () => {
+            const editName = document.getElementById('edit_name').value.trim();
+            const editRole = document.getElementById('edit_role').value.trim();
+            const editPhone = document.getElementById('edit_phone').value.trim();
+            const editSalary = document.getElementById('edit_salary').value.trim();
+
+            try {
+                await API.put(`/api/employees/${id}`, { name: editName, role: editRole, phone: editPhone, salary: editSalary });
+                Modal.close();
+                Toast.success('Employee updated successfully');
+                loadEmployees(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Update failed');
+            }
+        }
+    });
+}
+
+function confirmDelete(id) {
+    Modal.confirm({
+        title: 'Delete Employee',
+        message: 'Are you sure you want to delete this employee record?',
+        onConfirm: async () => {
+            try {
+                await API.delete(`/api/employees/${id}`);
+                Toast.success('Employee deleted');
+                loadEmployees(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Delete failed');
+            }
+        }
+    });
+}
+
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadEmployees(newPage);
+    }
+}
+
+function logout() {
+    API.logout();
+}
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function debounce(func, timeout = 300){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+window.onload = () => {
+    loadEmployees(1);
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.oninput = debounce(() => loadEmployees(1), 300);
+    }
+};
+</script>
+
+</body>
+</html>

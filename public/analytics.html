@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Financial Analytics</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            padding: 20px 24px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Header Filter Bar -->
+    <div class="filter-bar">
+        <div>
+            <h2 style="margin:0; font-size:1.5rem;">📊 Financial & Revenue Analytics</h2>
+            <span style="font-size:0.85rem; color:var(--text-secondary);">Real-time revenue, parts vs labor sales, and trend breakdown</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <label for="timeframeSelect" style="font-weight:600; font-size:0.9rem;">Timeframe:</label>
+            <select id="timeframeSelect" onchange="loadAnalytics()" style="padding:8px 14px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-primary); font-weight:600;">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week (7 Days)</option>
+                <option value="month" selected>This Month (30 Days)</option>
+                <option value="year">This Year (365 Days)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Financial Metrics Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon">💰</div>
+            <div>
+                <div class="metric-value" id="statRevenue">$0.00</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">📦</div>
+            <div>
+                <div class="metric-value" id="statPartsRevenue">$0.00</div>
+                <div class="metric-label">Parts Sales Revenue</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">👨‍🔧</div>
+            <div>
+                <div class="metric-value" id="statLaborRevenue">$0.00</div>
+                <div class="metric-label">Labor Service Revenue</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">📄</div>
+            <div>
+                <div class="metric-value" id="statAvgInvoice">$0.00</div>
+                <div class="metric-label">Average Invoice Value</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">🛠</div>
+            <div>
+                <div class="metric-value" id="statTotalServices">0</div>
+                <div class="metric-label">Total Service Jobs</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon">✅</div>
+            <div>
+                <div class="metric-value" id="statCompletedJobs">0</div>
+                <div class="metric-label">Completed Jobs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Chart.js Visualizer -->
+    <div class="chart-card">
+        <h3 style="margin-top:0; margin-bottom:16px;">📈 Completed Revenue Trend Analysis</h3>
+        <div style="position:relative; height:360px; width:100%;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+let chartInstance = null;
+
+async function loadAnalytics() {
+    try {
+        const timeframe = document.getElementById('timeframeSelect').value;
+        const res = await API.get(`/api/dashboard/stats?timeframe=${timeframe}`);
+        const s = res.stats;
+
+        document.getElementById('statRevenue').innerText = `$${parseFloat(s.totalRevenue).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        document.getElementById('statPartsRevenue').innerText = `$${parseFloat(s.partsRevenue).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        document.getElementById('statLaborRevenue').innerText = `$${parseFloat(s.laborRevenue).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        document.getElementById('statAvgInvoice').innerText = `$${parseFloat(s.averageInvoice).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        document.getElementById('statTotalServices').innerText = s.totalServices || 0;
+        document.getElementById('statCompletedJobs').innerText = s.completedJobs || 0;
+
+        renderChart(res.revenueTrends || []);
+    } catch (err) {
+        Toast.error(err.message || 'Error loading analytics data');
+    }
+}
+
+function renderChart(trendsData) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    const labels = trendsData.map(t => t.date);
+    const revenues = trendsData.map(t => parseFloat(t.revenue));
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Completed Jobs'],
+            datasets: [{
+                label: 'Completed Service Revenue ($)',
+                data: revenues.length > 0 ? revenues : [0],
+                borderColor: '#c9a227',
+                backgroundColor: 'rgba(201, 162, 39, 0.15)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#c9a227'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, labels: { color: '#888888', font: { weight: 'bold' } } }
+            },
+            scales: {
+                x: { ticks: { color: '#888888' }, grid: { display: false } },
+                y: { ticks: { color: '#888888' }, grid: { color: 'rgba(200,200,200,0.1)' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+function logout() {
+    API.logout();
+}
+
+window.onload = loadAnalytics;
+</script>
+
+</body>
+</html>

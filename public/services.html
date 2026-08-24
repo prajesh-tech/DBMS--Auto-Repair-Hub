@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Service Jobs</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">🛠 Service Job Management</h2>
+        </div>
+
+        <!-- Add Service Job Form -->
+        <form id="addServiceForm" onsubmit="handleAddService(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Vehicle *</label>
+                    <select id="service_car_id" required>
+                        <option value="">Select Vehicle...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assigned Employee</label>
+                    <select id="service_employee_id">
+                        <option value="">Select Employee...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Job Date *</label>
+                    <input type="date" id="service_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Total Cost ($)</label>
+                    <input type="number" step="0.01" id="service_cost" placeholder="150.00">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="service_status">
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label>Job Description *</label>
+                <input type="text" id="service_desc" placeholder="Full Synthetic Oil Change and Brake Inspection" required>
+            </div>
+            <div style="margin-bottom:20px;">
+                <button type="submit" class="btn">➕ Create Service Job</button>
+            </div>
+        </form>
+
+        <!-- Controls Bar (Search, Status Filter, Refresh) -->
+        <div class="controls-bar">
+            <div style="display:flex; gap:12px; flex-wrap:wrap; max-width:600px; width:100%;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search customer, vehicle, description..." onkeyup="if(event.key==='Enter') loadServices(1)" oninput="if(this.value==='') loadServices(1)">
+                    <button class="btn btn-outline" onclick="loadServices(1)">Search</button>
+                </div>
+                <select id="statusFilter" style="width:160px;" onchange="loadServices(1)">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <button class="btn btn-outline" onclick="loadServices(currentPage)">🔄 Refresh</button>
+        </div>
+
+        <!-- Service Table rendering ALL details -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vehicle & Owner</th>
+                        <th>Assigned Mechanic</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceTable">
+                    <tr><td colspan="8" class="empty-state">Loading service jobs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span id="paginationInfo" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline" id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button class="btn btn-outline" id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+let currentPage = 1;
+let totalPages = 1;
+let carList = [];
+let employeeList = [];
+let serviceDataMap = {};
+
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    if (typeof dateStr === 'string' && dateStr.includes('T')) return dateStr.split('T')[0];
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Default date to today
+document.getElementById('service_date').valueAsDate = new Date();
+
+async function loadDropdowns() {
+    try {
+        const [carsRes, empRes] = await Promise.all([
+            API.get('/api/cars?limit=1000'),
+            API.get('/api/employees?limit=1000')
+        ]);
+        carList = carsRes.data || [];
+        employeeList = empRes.data || [];
+
+        document.getElementById('service_car_id').innerHTML = '<option value="">Select Vehicle...</option>' + 
+            carList.map(c => `<option value="${c.car_id}">${escapeHTML(c.year)} ${escapeHTML(c.manufacturer)} ${escapeHTML(c.model)} (${escapeHTML(c.customer_name || 'No Owner')})</option>`).join('');
+
+        document.getElementById('service_employee_id').innerHTML = '<option value="">Select Employee...</option>' + 
+            employeeList.map(e => `<option value="${e.employee_id}">${escapeHTML(e.name)} - ${escapeHTML(e.role)}</option>`).join('');
+    } catch (err) {
+        console.error('Failed to load dropdowns:', err);
+    }
+}
+
+async function loadServices(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+    const status = document.getElementById('statusFilter').value;
+
+    try {
+        const res = await API.get(`/api/services?page=${page}&limit=10&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`);
+        const tbody = document.getElementById('serviceTable');
+        
+        totalPages = res.pagination.totalPages || 1;
+        document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} total)`;
+        
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+        if (!res.data || res.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No service jobs found</td></tr>`;
+            return;
+        }
+
+        serviceDataMap = {};
+        res.data.forEach(s => { serviceDataMap[s.job_id] = s; });
+
+        tbody.innerHTML = res.data.map(s => `
+            <tr>
+                <td>#${s.job_id}</td>
+                <td>
+                    <strong>${escapeHTML(s.manufacturer || '')} ${escapeHTML(s.model || 'N/A')}</strong><br>
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">Owner: ${escapeHTML(s.customer_name || 'N/A')}</span>
+                </td>
+                <td>${escapeHTML(s.employee_name || 'Unassigned')}</td>
+                <td>${formatDateForInput(s.job_date)}</td>
+                <td style="max-width:220px;" title="${escapeHTML(s.description)}">${escapeHTML(s.description)}</td>
+                <td>$${parseFloat(s.total_cost || 0).toFixed(2)}</td>
+                <td>
+                    <span class="badge badge-${s.status === 'Completed' ? 'completed' : s.status === 'In Progress' ? 'progress' : 'pending'}">
+                        ${s.status}
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn btn-outline btn-sm" onclick="downloadInvoice(${s.job_id})" title="Download PDF Invoice">📄 Invoice</button>
+                        <button class="btn btn-outline btn-sm" onclick="openEditModal(${s.job_id})">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(${s.job_id})">🗑 Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        Toast.error(err.message || 'Failed to load services');
+    }
+}
+
+async function handleAddService(e) {
+    e.preventDefault();
+    const car_id = document.getElementById('service_car_id').value;
+    const employee_id = document.getElementById('service_employee_id').value;
+    const job_date = document.getElementById('service_date').value;
+    const description = document.getElementById('service_desc').value.trim();
+    const total_cost = document.getElementById('service_cost').value.trim();
+    const status = document.getElementById('service_status').value;
+
+    try {
+        await API.post('/api/services', { car_id, employee_id: employee_id || null, job_date, description, total_cost, status });
+        Toast.success('Service job created successfully!');
+        
+        document.getElementById('service_desc').value = '';
+        document.getElementById('service_cost').value = '';
+
+        loadServices(1);
+    } catch (err) {
+        Toast.error(err.message || 'Failed to create service job');
+    }
+}
+
+function openEditModal(id) {
+    const s = serviceDataMap[id];
+    if (!s) return;
+
+    const formattedDate = formatDateForInput(s.job_date);
+
+    const carOptions = carList.map(c => 
+        `<option value="${c.car_id}" ${c.car_id === s.car_id ? 'selected' : ''}>${escapeHTML(c.manufacturer)} ${escapeHTML(c.model)}</option>`
+    ).join('');
+
+    const empOptions = '<option value="">Unassigned</option>' + employeeList.map(e => 
+        `<option value="${e.employee_id}" ${e.employee_id === s.employee_id ? 'selected' : ''}>${escapeHTML(e.name)}</option>`
+    ).join('');
+
+    Modal.open({
+        title: `Edit Service Job #${id}`,
+        bodyHTML: `
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Vehicle</label>
+                <select id="edit_car_id">${carOptions}</select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Assigned Mechanic</label>
+                <select id="edit_employee_id">${empOptions}</select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Job Date</label>
+                <input type="date" id="edit_date" value="${formattedDate}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Status</label>
+                <select id="edit_status">
+                    <option value="Pending" ${s.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="In Progress" ${s.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="Completed" ${s.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Total Cost ($)</label>
+                <input type="number" step="0.01" id="edit_cost" value="${s.total_cost || 0}">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="edit_desc" value="${escapeHTML(s.description || '')}">
+            </div>
+        `,
+        onConfirm: async () => {
+            const editCarId = document.getElementById('edit_car_id').value;
+            const editEmpId = document.getElementById('edit_employee_id').value;
+            const editDate = document.getElementById('edit_date').value;
+            const editStatus = document.getElementById('edit_status').value;
+            const editCost = document.getElementById('edit_cost').value;
+            const editDesc = document.getElementById('edit_desc').value;
+
+            try {
+                await API.put(`/api/services/${id}`, {
+                    car_id: editCarId,
+                    employee_id: editEmpId || null,
+                    job_date: editDate || null,
+                    status: editStatus,
+                    total_cost: editCost,
+                    description: editDesc
+                });
+                Modal.close();
+                Toast.success('Service job updated');
+                loadServices(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Update failed');
+            }
+        }
+    });
+}
+
+function confirmDelete(id) {
+    Modal.confirm({
+        title: 'Delete Service Job',
+        message: 'Are you sure you want to delete this service record?',
+        onConfirm: async () => {
+            try {
+                await API.delete(`/api/services/${id}`);
+                Toast.success('Service job deleted');
+                loadServices(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Delete failed');
+            }
+        }
+    });
+}
+
+function downloadInvoice(jobId) {
+    window.location.href = `/api/services/${jobId}/invoice`;
+}
+
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadServices(newPage);
+    }
+}
+
+function logout() {
+    API.logout();
+}
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function debounce(func, timeout = 300){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+window.onload = () => {
+    loadDropdowns();
+    loadServices(1);
+    
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.oninput = debounce(() => loadServices(1), 300);
+    }
+};
+</script>
+
+</body>
+</html>

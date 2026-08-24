@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Customers</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Dashboard</a>
+        <a href="customer.html" class="nav-link">👤 Customers</a>
+        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
+        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
+        <a href="services.html" class="nav-link">🛠 Services</a>
+        <a href="parts.html" class="nav-link">📦 Inventory</a>
+        <a href="analytics.html" class="nav-link">📊 Analytics</a>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
+        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">👤 Customer Management</h2>
+        </div>
+
+        <!-- Add Customer Form -->
+        <form id="addCustomerForm" onsubmit="handleAddCustomer(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="cust_name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="text" id="cust_phone" placeholder="555-0192" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="cust_email" placeholder="john@example.com">
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <button type="submit" class="btn">➕ Add Customer</button>
+            </div>
+        </form>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by name, phone, email..." onkeyup="if(event.key==='Enter') loadCustomers(1)" oninput="if(this.value==='') loadCustomers(1)">
+                <button class="btn btn-outline" onclick="loadCustomers(1)">Search</button>
+            </div>
+            <button class="btn btn-outline" onclick="loadCustomers(currentPage)">🔄 Refresh</button>
+        </div>
+
+        <!-- Customer Data Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTable">
+                    <tr><td colspan="5" class="empty-state">Loading customers...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span id="paginationInfo" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-outline" id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button class="btn btn-outline" id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idle.js"></script>
+<script>
+API.requireAuth();
+
+let currentPage = 1;
+let totalPages = 1;
+let customerDataMap = {};
+
+async function loadCustomers(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+
+    try {
+        const res = await API.get(`/api/customers?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+        const tbody = document.getElementById('customerTable');
+        
+        totalPages = res.pagination.totalPages || 1;
+        document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} total)`;
+        
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+        if (!res.data || res.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No customers found</td></tr>`;
+            return;
+        }
+
+        customerDataMap = {};
+        res.data.forEach(c => { customerDataMap[c.customer_id] = c; });
+
+        tbody.innerHTML = res.data.map(c => `
+            <tr>
+                <td>#${c.customer_id}</td>
+                <td><strong>${escapeHTML(c.name)}</strong></td>
+                <td>${escapeHTML(c.phone)}</td>
+                <td>${escapeHTML(c.email || 'N/A')}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="openEditModal(${c.customer_id})">✏️ Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete(${c.customer_id})">🗑 Delete</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        Toast.error(err.message || 'Failed to load customers');
+    }
+}
+
+async function handleAddCustomer(e) {
+    e.preventDefault();
+    const name = document.getElementById('cust_name').value.trim();
+    const phone = document.getElementById('cust_phone').value.trim();
+    const email = document.getElementById('cust_email').value.trim();
+
+    try {
+        await API.post('/api/customers', { name, phone, email });
+        Toast.success('Customer added successfully!');
+        
+        document.getElementById('cust_name').value = '';
+        document.getElementById('cust_phone').value = '';
+        document.getElementById('cust_email').value = '';
+
+        loadCustomers(1);
+    } catch (err) {
+        Toast.error(err.message || 'Failed to add customer');
+    }
+}
+
+function openEditModal(id) {
+    const c = customerDataMap[id];
+    if (!c) return;
+
+    Modal.open({
+        title: `Edit Customer #${id}`,
+        bodyHTML: `
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Name</label>
+                <input type="text" id="edit_name" value="${escapeHTML(c.name || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Phone</label>
+                <input type="text" id="edit_phone" value="${escapeHTML(c.phone || '')}">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="edit_email" value="${escapeHTML(c.email || '')}">
+            </div>
+        `,
+        onConfirm: async () => {
+            const editName = document.getElementById('edit_name').value.trim();
+            const editPhone = document.getElementById('edit_phone').value.trim();
+            const editEmail = document.getElementById('edit_email').value.trim();
+
+            try {
+                await API.put(`/api/customers/${id}`, { name: editName, phone: editPhone, email: editEmail });
+                Modal.close();
+                Toast.success('Customer updated successfully');
+                loadCustomers(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Update failed');
+            }
+        }
+    });
+}
+
+function confirmDelete(id) {
+    Modal.confirm({
+        title: 'Delete Customer',
+        message: 'Are you sure you want to delete this customer? This will archive the record without destroying repair history.',
+        onConfirm: async () => {
+            try {
+                await API.delete(`/api/customers/${id}`);
+                Toast.success('Customer archived');
+                loadCustomers(currentPage);
+            } catch (err) {
+                Toast.error(err.message || 'Delete failed');
+            }
+        }
+    });
+}
+
+function changePage(delta) {
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        loadCustomers(newPage);
+    }
+}
+
+function logout() {
+    API.logout();
+}
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function debounce(func, timeout = 300){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+window.onload = () => {
+    loadCustomers(1);
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.oninput = debounce(() => loadCustomers(1), 300);
+    }
+};
+</script>
+
+</body>
+</html>

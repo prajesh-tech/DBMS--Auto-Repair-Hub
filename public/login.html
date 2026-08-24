@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Repair Hub - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 36px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+        .login-brand {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .login-sub {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+        .password-box {
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-box input {
+            width: 100%;
+            padding-right: 42px;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        .password-toggle:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="login-brand">🔧 Auto Repair Hub</div>
+    <p class="login-sub">Sign in to access shop management</p>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group" style="margin-bottom:16px; text-align:left;">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username" required autofocus>
+        </div>
+
+        <div class="form-group" style="margin-bottom:24px; text-align:left;">
+            <label for="password">Password</label>
+            <div class="password-box">
+                <input type="password" id="password" placeholder="Enter password" required>
+                <span class="password-toggle" id="toggleEye" onclick="togglePassword()">👁</span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; justify-content:center; padding:12px; font-size:1rem; border-radius:10px;" id="loginBtn">
+            Sign In
+        </button>
+    </form>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/api.js"></script>
+<script>
+if (API.getUser()) {
+    window.location.href = 'index.html';
+}
+
+function togglePassword() {
+    const p = document.getElementById('password');
+    const eye = document.getElementById('toggleEye');
+    if (p.type === 'password') {
+        p.type = 'text';
+        eye.innerText = '🙈';
+    } else {
+        p.type = 'password';
+        eye.innerText = '👁';
+    }
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value.trim();
+
+    try {
+        btn.disabled = true;
+        btn.innerText = 'Signing in...';
+
+        const res = await API.post('/api/auth/login', { username: user, password: pass });
+        
+        if (res.user) {
+            API.setUser(res.user);
+        }
+        Toast.success('Login Successful!');
+
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 400);
+
+    } catch (err) {
+        Toast.error(err.message || 'Login failed');
+        btn.disabled = false;
+        btn.innerText = 'Sign In';
+    }
+}
+</script>
+
+</body>
+</html>

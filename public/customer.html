@@ -1,96 +1,580 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Repair Hub - Customers</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="web_dashboard" name="shell-type"/>
+    <title>Auto Repair Hub - Customer Management &amp; Accounts</title>
+    <link rel="icon" type="image/png" href="images/logo.png"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/style.css"/>
+    <style>
+        @layer base {
+            html, body { margin: 0; padding: 0; }
+            body { overscroll-behavior: none; }
+            main > :first-child { margin-top: 0 !important; }
+            main > :last-child { margin-bottom: 0 !important; }
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#00530a",
+                        "tertiary-container": "#ffffff",
+                        "on-primary-container": "#747676",
+                        "on-primary-fixed-variant": "#454747",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#74ff6c",
+                        "tertiary-fixed-dim": "#00e630",
+                        background: "#fcf8f8",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-surface-variant": "#444748",
+                        primary: "#5d5f5f",
+                        "primary-fixed": "#e2e2e2",
+                        "secondary-container": "#2b69fa",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fcf8f8",
+                        "surface-tint": "#5d5f5f",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f4f0ef",
+                        "primary-fixed-dim": "#c6c6c7",
+                        error: "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#008918",
+                        tertiary: "#006e11",
+                        "outline-variant": "#c4c7c8",
+                        "on-secondary-container": "#fefcff",
+                        "primary-container": "#ffffff",
+                        "on-secondary-fixed-variant": "#003da9",
+                        surface: "#fcf8f8",
+                        "surface-container-high": "#ebe7e7",
+                        "on-primary-fixed": "#1a1c1c",
+                        "inverse-primary": "#c6c6c7",
+                        "on-surface": "#1c1b1b",
+                        secondary: "#0050d7",
+                        "on-tertiary-fixed": "#002202",
+                        "inverse-surface": "#313030",
+                        "surface-variant": "#e5e2e1",
+                        "on-secondary-fixed": "#00174c",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#dbe1ff",
+                        "on-background": "#1c1b1b",
+                        "surface-dim": "#ddd9d9",
+                        "surface-container": "#f1edec",
+                        "surface-container-low": "#f6f3f2",
+                        outline: "#747878"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        "space-lg": "1.5rem",
+                        "space-xl": "2rem",
+                        margin: "1.5rem",
+                        "space-sm": "0.5rem",
+                        gutter: "1rem",
+                        "space-xs": "0.25rem",
+                        "space-md": "1rem"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter", "sans-serif"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }]
+                    }
+                }
+            }
+        };
+    </script>
 </head>
-<body>
+<body class="bg-surface text-on-surface antialiased">
 
-<nav class="navbar">
-    <a href="index.html" class="navbar-brand">🔧 Auto Repair Hub</a>
-    <div class="nav-links">
-        <a href="index.html" class="nav-link">🏠 Dashboard</a>
-        <a href="customer.html" class="nav-link">👤 Customers</a>
-        <a href="cars.html" class="nav-link">🚗 Vehicles</a>
-        <a href="employee.html" class="nav-link">👨‍🔧 Employees</a>
-        <a href="services.html" class="nav-link">🛠 Services</a>
-        <a href="parts.html" class="nav-link">📦 Inventory</a>
-        <a href="analytics.html" class="nav-link">📊 Analytics</a>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="API.toggleTheme()">🌙 Dark</button>
-        <span id="userBadge" style="font-weight:600; font-size:0.85rem; color:var(--text-secondary); background:var(--primary-light); padding:4px 8px; border-radius:6px;">👤 Admin</span>
-        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout ⏻</button>
-    </div>
-</nav>
-
-<div class="container">
-
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">👤 Customer Management</h2>
-        </div>
-
-        <!-- Add Customer Form -->
-        <form id="addCustomerForm" onsubmit="handleAddCustomer(event)">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" id="cust_name" placeholder="John Doe" required>
+<!-- Desktop Left Sidebar -->
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/80 backdrop-blur-[20px] shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
+    <div class="flex flex-col gap-space-md">
+        <!-- Brand Header with Logo -->
+        <a href="index.html" class="flex items-center gap-space-sm px-space-xs text-inherit no-underline">
+            <img alt="Auto Repair Hub Logo" class="h-9 w-9 rounded-full object-contain shrink-0 shadow-sm" src="images/logo.png"/>
+            <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-space-xs">
+                    <span class="text-sm font-semibold tracking-tight text-on-surface truncate">Auto Repair Hub</span>
+                    <span class="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-secondary-fixed text-on-secondary-fixed">Pro Fleet</span>
                 </div>
-                <div class="form-group">
-                    <label>Phone Number *</label>
-                    <input type="text" id="cust_phone" placeholder="555-0192" required>
+                <span class="text-[11px] text-on-surface-variant truncate">Diagnostics &amp; Operations</span>
+            </div>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="flex flex-col gap-space-xs nav-links">
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="index.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <span>Dashboard</span>
                 </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="cust_email" placeholder="john@example.com">
+            </a>
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="analytics.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">analytics</span>
+                    <span>Analytics</span>
                 </div>
-            </div>
-            <div style="margin-bottom:20px;">
-                <button type="submit" class="btn">➕ Add Customer</button>
-            </div>
-        </form>
-
-        <!-- Controls Bar -->
-        <div class="controls-bar">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search by name, phone, email..." onkeyup="if(event.key==='Enter') loadCustomers(1)" oninput="if(this.value==='') loadCustomers(1)">
-                <button class="btn btn-outline" onclick="loadCustomers(1)">Search</button>
-            </div>
-            <button class="btn btn-outline" onclick="loadCustomers(currentPage)">🔄 Refresh</button>
-        </div>
-
-        <!-- Customer Data Table -->
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customerTable">
-                    <tr><td colspan="5" class="empty-state">Loading customers...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination">
-            <span id="paginationInfo" style="font-size:0.9rem; color:var(--text-secondary);">Page 1 of 1</span>
-            <div style="display:flex; gap:8px;">
-                <button class="btn btn-outline" id="prevBtn" onclick="changePage(-1)">Previous</button>
-                <button class="btn btn-outline" id="nextBtn" onclick="changePage(1)">Next</button>
-            </div>
-        </div>
-
+            </a>
+            <a aria-current="page" class="nav-link active flex items-center justify-between px-space-sm py-2 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-sm" href="customer.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">group</span>
+                    <span>Customers</span>
+                </div>
+            </a>
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="cars.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">directions_car</span>
+                    <span>Vehicle Fleet</span>
+                </div>
+            </a>
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="services.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">build</span>
+                    <span>Service Jobs</span>
+                </div>
+            </a>
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="parts.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                    <span>Inventory Parts</span>
+                </div>
+            </a>
+            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="employee.html">
+                <div class="flex items-center gap-space-sm">
+                    <span class="material-symbols-outlined text-[20px]">badge</span>
+                    <span>Employees</span>
+                </div>
+            </a>
+        </nav>
     </div>
 
+    <!-- Bottom Controls: Theme Mode & User Badge -->
+    <div class="flex flex-col gap-space-sm">
+        <div class="flex items-center justify-between p-space-xs bg-surface-container rounded-lg border border-outline-variant/30">
+            <span class="text-xs font-medium text-on-surface-variant px-space-xs">Appearance</span>
+            <button id="themeToggleBtn" onclick="API.toggleTheme()" class="px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface text-xs font-semibold shadow-xs hover:bg-surface-container transition-colors cursor-pointer" type="button">
+                🌙 Dark
+            </button>
+        </div>
+
+        <div class="flex items-center justify-between p-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/30">
+            <div class="flex items-center gap-space-xs min-w-0">
+                <div class="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center shrink-0 text-secondary font-bold">
+                    👤
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span id="userBadge" class="text-xs font-semibold text-on-surface truncate">Admin</span>
+                    <span class="text-[11px] text-on-surface-variant truncate">Fleet Director</span>
+                </div>
+            </div>
+            <button onclick="logout()" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container rounded transition-colors cursor-pointer" title="Sign out" type="button">
+                <span class="material-symbols-outlined text-[18px]">logout</span>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Container -->
+<div class="lg:pl-72">
+    <!-- Top Sticky Header -->
+    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
+        <div class="flex items-center gap-space-md flex-1 max-w-xl">
+            <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant lg:hidden" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex items-center gap-space-xs lg:hidden">
+                <img alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-full object-contain shrink-0 shadow-sm" src="images/logo.png"/>
+                <span class="text-sm font-bold text-on-surface">Auto Repair Hub</span>
+            </div>
+            <div class="relative w-full hidden sm:block">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input oninput="document.getElementById('customer-search-input').value = this.value; debounceSearch();" class="w-full h-10 pl-9 pr-4 text-xs bg-surface-container-high rounded-lg text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all border border-outline-variant/30" placeholder="Search customer, phone, email, VIN..." type="text"/>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-space-sm">
+            <div class="hidden md:flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface-container text-xs">
+                <span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+                <span class="text-on-surface text-[11px] font-medium">CRM Cloud Active</span>
+            </div>
+            <button onclick="toggleCollapse(); document.getElementById('input-name').focus();" class="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-secondary text-on-secondary text-xs font-semibold rounded-lg hover:bg-secondary-container transition-colors shadow-sm cursor-pointer" type="button">
+                <span class="material-symbols-outlined text-[16px]">person_add</span>
+                <span>Add Customer</span>
+            </button>
+            <button onclick="API.toggleTheme()" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer" title="Toggle Theme" type="button">
+                <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer Navigation -->
+    <div id="mobileDrawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity lg:hidden" onclick="toggleMobileNav()">
+        <div class="w-72 h-full bg-surface-container-low p-space-md flex flex-col justify-between" onclick="event.stopPropagation()">
+            <div class="flex flex-col gap-space-md">
+                <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/30">
+                    <div class="flex items-center gap-space-sm">
+                        <img src="images/logo.png" alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-full">
+                        <span class="font-bold text-on-surface">Auto Repair Hub</span>
+                    </div>
+                    <button onclick="toggleMobileNav()" class="p-1 text-on-surface-variant">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <nav class="flex flex-col gap-1">
+                    <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
+                    </a>
+                    <a href="analytics.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">analytics</span> Analytics
+                    </a>
+                    <a href="customer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary-container text-on-secondary-container">
+                        <span class="material-symbols-outlined text-[20px]">group</span> Customers
+                    </a>
+                    <a href="cars.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">directions_car</span> Vehicle Fleet
+                    </a>
+                    <a href="services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">build</span> Service Jobs
+                    </a>
+                    <a href="parts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">inventory_2</span> Inventory Parts
+                    </a>
+                    <a href="employee.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">badge</span> Employees
+                    </a>
+                </nav>
+            </div>
+            <div class="pt-space-sm border-t border-outline-variant/30">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-2 text-sm text-error font-medium hover:bg-error-container/30 rounded-lg">
+                    <span class="material-symbols-outlined text-[18px]">logout</span> Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative pt-16 bg-surface min-h-screen pb-20 lg:pb-8">
+        <div class="flex flex-col w-full">
+            <div class="p-space-md sm:p-space-lg lg:p-space-xl flex flex-col gap-space-lg max-w-7xl mx-auto w-full">
+
+                <!-- Top Action / Context Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-space-xs">
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-secondary-fixed text-on-secondary-fixed uppercase">CRM Database</span>
+                            <span class="text-xs text-on-surface-variant font-mono">v4.8 • Real-time DB Link</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface flex items-center gap-2">
+                            <span>Customer Management &amp; Accounts</span>
+                        </h1>
+                        <p class="text-xs sm:text-sm text-on-surface-variant max-w-2xl leading-relaxed">
+                            Manage client vehicle profiles, contact records, communication history, and active billing accounts with real-time telematics linkage.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-space-sm shrink-0">
+                        <button onclick="window.print()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-all shadow-sm cursor-pointer" type="button">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">file_download</span>
+                            <span>Print / Export</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition-all shadow-md hover:shadow-lg cursor-pointer" id="toggle-register-btn" type="button">
+                            <span class="material-symbols-outlined text-[18px]">person_add</span>
+                            <span>+ Register New Customer</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
+                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-on-surface-variant">Total Accounts</span>
+                            <span class="p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed material-symbols-outlined text-[18px]">group</span>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span id="statCustomerCount" class="text-2xl font-bold tracking-tight text-on-surface">0</span>
+                            <span class="text-[11px] font-semibold text-tertiary flex items-center"><span class="material-symbols-outlined text-[14px]">trending_up</span>Live</span>
+                        </div>
+                    </div>
+
+                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-on-surface-variant">Fleet &amp; VIP Accounts</span>
+                            <span class="p-1.5 rounded-lg bg-surface-container-highest text-on-surface material-symbols-outlined text-[18px]">local_shipping</span>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold tracking-tight text-on-surface">Verified</span>
+                            <span class="text-[11px] font-medium text-on-surface-variant">Linked</span>
+                        </div>
+                    </div>
+
+                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-on-surface-variant">Average Vehicle / Client</span>
+                            <span class="p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed material-symbols-outlined text-[18px]">directions_car</span>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold tracking-tight text-on-surface">1.4</span>
+                            <span class="text-[11px] font-semibold text-tertiary flex items-center">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-on-surface-variant">Retention Rate</span>
+                            <span class="p-1.5 rounded-lg bg-surface-container-highest text-on-surface material-symbols-outlined text-[18px]">verified</span>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold tracking-tight text-on-surface">96.8%</span>
+                            <span class="text-[11px] font-semibold text-tertiary">High Rating</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Register Customer Card (Collapsible) -->
+                <div class="rounded-2xl bg-surface-container-low/90 backdrop-blur-xl p-space-md sm:p-space-lg shadow-sm flex flex-col gap-space-md transition-all duration-300 border border-outline-variant/30" id="quick-register-panel">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+                                <span class="material-symbols-outlined text-[20px]">person_add</span>
+                            </div>
+                            <div>
+                                <h2 class="text-sm sm:text-base font-bold text-on-surface tracking-tight">Quick Register Customer</h2>
+                                <p class="text-[11px] text-on-surface-variant">Create and bind an active repair ledger in seconds</p>
+                            </div>
+                        </div>
+                        <button class="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer" id="collapse-toggle-btn" title="Toggle Panel" type="button">
+                            <span class="material-symbols-outlined text-[20px] transition-transform duration-200" id="collapse-icon">expand_less</span>
+                        </button>
+                    </div>
+
+                    <form class="flex flex-col gap-space-md" id="customer-form" onsubmit="handleCustomerSubmit(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+                            <!-- Full Name -->
+                            <div class="flex flex-col gap-1.5">
+                                <label for="input-name" class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+                                    <span>Full Name</span>
+                                    <span class="text-error">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">badge</span>
+                                    <input class="w-full h-11 pl-9 pr-3 text-xs bg-surface-container-lowest rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-secondary transition-all shadow-sm border border-outline-variant/30" id="input-name" placeholder="e.g. Marcus Vance" required="" type="text"/>
+                                </div>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="flex flex-col gap-1.5">
+                                <label for="input-phone" class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+                                    <span>Phone Number</span>
+                                    <span class="text-error">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">phone</span>
+                                    <input class="w-full h-11 pl-9 pr-3 text-xs bg-surface-container-lowest rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-secondary transition-all shadow-sm border border-outline-variant/30" id="input-phone" placeholder="e.g. 555-019-2834" required="" type="tel"/>
+                                </div>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div class="flex flex-col gap-1.5">
+                                <label for="input-email" class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+                                    <span>Email Address</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">mail</span>
+                                    <input class="w-full h-11 pl-9 pr-3 text-xs bg-surface-container-lowest rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-secondary transition-all shadow-sm border border-outline-variant/30" id="input-email" placeholder="e.g. m.vance@precisionfleet.com" type="email"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md pt-space-xs">
+                            <div class="flex items-center gap-2 flex-wrap text-xs text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+                                <span>Record will sync directly with vehicle service records</span>
+                            </div>
+                            <div class="flex items-center gap-space-sm w-full sm:w-auto justify-end">
+                                <button class="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer" type="reset">
+                                    Clear Form
+                                </button>
+                                <button class="flex items-center gap-1.5 px-5 py-2.5 bg-secondary text-on-secondary rounded-xl text-xs font-semibold hover:bg-secondary-container transition-all shadow-md cursor-pointer" type="submit">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    <span>+ Save Customer Profile</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Filter & Search Controls -->
+                <div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md border border-outline-variant/30">
+                    <div class="relative flex-1">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                        <input class="w-full h-10 pl-9 pr-4 text-xs bg-surface-container-high rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all border border-outline-variant/20" id="customer-search-input" oninput="debounceSearch()" placeholder="Search by customer name, phone, or email..." type="text"/>
+                    </div>
+                    <div class="flex items-center gap-space-sm flex-wrap">
+                        <button onclick="loadCustomers(1)" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl transition-colors cursor-pointer" id="refresh-table-btn" title="Sync database" type="button">
+                            <span class="material-symbols-outlined text-[16px] text-on-surface-variant" id="refresh-icon">sync</span>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customer Database Table Container -->
+                <div class="rounded-2xl bg-surface-container-lowest shadow-sm overflow-hidden flex flex-col border border-outline-variant/30">
+                    <div class="p-space-md bg-surface-container-low flex items-center justify-between border-b border-outline-variant/20">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[20px] text-secondary">database</span>
+                            <span class="text-xs sm:text-sm font-bold text-on-surface">Verified Customer Records</span>
+                            <span id="activeCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-container-highest text-on-surface-variant">0 Records</span>
+                        </div>
+                        <span class="text-xs text-on-surface-variant font-mono hidden sm:inline">Database Link: Active</span>
+                    </div>
+
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left text-xs min-w-[720px]">
+                            <thead>
+                                <tr class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant bg-surface-container/60">
+                                    <th class="py-3.5 px-space-md w-14">ID</th>
+                                    <th class="py-3.5 px-space-md">Client Name &amp; Profile</th>
+                                    <th class="py-3.5 px-space-md">Phone Number</th>
+                                    <th class="py-3.5 px-space-md">Email Address</th>
+                                    <th class="py-3.5 px-space-md text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-surface-container-low text-on-surface" id="customers-table-body">
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-on-surface-variant italic">Loading verified customer accounts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination & Summary Bar -->
+                    <div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm border-t border-outline-variant/20">
+                        <span id="paginationInfo" class="text-xs text-on-surface-variant">
+                            Showing customer records
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button id="prevBtn" onclick="changePage(-1)" class="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed" type="button">
+                                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                            </button>
+                            <span id="pageDisplay" class="px-3 py-1 rounded-lg bg-secondary text-on-secondary text-xs font-bold shadow-xs">1</span>
+                            <button id="nextBtn" onclick="changePage(1)" class="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed" type="button">
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telematics & Fleet Customer Insights -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+                    <div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-3 border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-on-surface uppercase tracking-wider">Fleet vs Private Ratio</span>
+                            <span class="material-symbols-outlined text-secondary text-[18px]">pie_chart</span>
+                        </div>
+                        <div class="flex items-center gap-4 my-auto">
+                            <div class="relative w-20 h-20 shrink-0">
+                                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+                                    <path class="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="68, 100" stroke-linecap="round" stroke-width="4"></path>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center font-bold text-xs text-on-surface">68%</div>
+                            </div>
+                            <div class="flex flex-col gap-1 text-xs">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                                    <span class="text-on-surface font-medium">Commercial Fleets (68%)</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-surface-container-highest"></span>
+                                    <span class="text-on-surface-variant font-medium">Private Owners (32%)</span>
+                                </div>
+                                <span class="text-[11px] text-tertiary mt-1 font-semibold">High client loyalty benchmark</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-3 border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-on-surface uppercase tracking-wider">Service Cadence</span>
+                            <span class="material-symbols-outlined text-secondary text-[18px]">calendar_month</span>
+                        </div>
+                        <div class="flex flex-col gap-2 my-auto">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-on-surface-variant">Scheduled Regular Inspections</span>
+                                <span class="font-bold text-on-surface">88% on track</span>
+                            </div>
+                            <div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+                                <div class="h-full bg-secondary rounded-full" style="width: 88%"></div>
+                            </div>
+                            <p class="text-[11px] text-on-surface-variant mt-1">Automatic maintenance reminders active across active accounts.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between border border-outline-variant/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-on-surface uppercase tracking-wider">Customer Support Hotline</span>
+                            <span class="material-symbols-outlined text-tertiary text-[18px]">support_agent</span>
+                        </div>
+                        <div class="flex items-center gap-3 my-2">
+                            <div class="w-10 h-10 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">mark_email_read</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-on-surface">Automated Notifications</span>
+                                <span class="text-[11px] text-on-surface-variant">SMS &amp; Email status updates triggered upon service completion</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] font-semibold text-secondary">
+                            <span>Direct Customer Channels Active</span>
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
 </div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/90 backdrop-blur-[20px] shadow-[0_-1px_8px_rgba(0,0,0,0.06)] z-50 flex items-center justify-around px-space-xs border-t border-outline-variant/30">
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[10px] hover:text-on-surface" href="index.html">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        <span>Dashboard</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[10px] hover:text-on-surface" href="services.html">
+        <span class="material-symbols-outlined text-[20px]">build</span>
+        <span>Jobs</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[10px] hover:text-on-surface" href="cars.html">
+        <span class="material-symbols-outlined text-[20px]">directions_car</span>
+        <span>Fleet</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[10px] hover:text-on-surface" href="parts.html">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        <span>Inventory</span>
+    </a>
+    <a aria-current="page" class="flex flex-col items-center gap-0.5 text-secondary font-semibold" href="customer.html">
+        <span class="material-symbols-outlined text-[20px]">group</span>
+        <span class="text-[10px]">Clients</span>
+    </a>
+</nav>
 
 <script src="js/toast.js"></script>
 <script src="js/modal.js"></script>
@@ -102,64 +586,128 @@ API.requireAuth();
 let currentPage = 1;
 let totalPages = 1;
 let customerDataMap = {};
+let isCollapsed = false;
+
+// Quick collapse and expand interaction for Registration panel
+const collapseBtn = document.getElementById('collapse-toggle-btn');
+const toggleRegisterBtn = document.getElementById('toggle-register-btn');
+const regForm = document.getElementById('customer-form');
+const collapseIcon = document.getElementById('collapse-icon');
+const regPanel = document.getElementById('quick-register-panel');
+
+function toggleCollapse() {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
+        regForm.classList.add('hidden');
+        collapseIcon.textContent = 'expand_more';
+    } else {
+        regForm.classList.remove('hidden');
+        collapseIcon.textContent = 'expand_less';
+    }
+}
+
+if (collapseBtn) collapseBtn.addEventListener('click', toggleCollapse);
+if (toggleRegisterBtn) toggleRegisterBtn.addEventListener('click', () => {
+    if (isCollapsed) toggleCollapse();
+    document.getElementById('input-name').focus();
+    regPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 async function loadCustomers(page = 1) {
     currentPage = page;
-    const search = document.getElementById('searchInput').value.trim();
+    const search = document.getElementById('customer-search-input').value.trim();
 
     try {
         const res = await API.get(`/api/customers?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
-        const tbody = document.getElementById('customerTable');
-        
+        const tbody = document.getElementById('customers-table-body');
+
         totalPages = res.pagination.totalPages || 1;
-        document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} total)`;
-        
+        document.getElementById('paginationInfo').innerText = `Showing ${res.data.length} of ${res.pagination.total} registered accounts`;
+        document.getElementById('pageDisplay').innerText = res.pagination.page;
+        document.getElementById('activeCountBadge').innerText = `${res.pagination.total || res.data.length} Active`;
+        document.getElementById('statCustomerCount').innerText = res.pagination.total || res.data.length;
+
         document.getElementById('prevBtn').disabled = currentPage <= 1;
         document.getElementById('nextBtn').disabled = currentPage >= totalPages;
 
         if (!res.data || res.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No customers found</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-on-surface-variant italic">No customers found matching search.</td></tr>`;
             return;
         }
 
         customerDataMap = {};
         res.data.forEach(c => { customerDataMap[c.customer_id] = c; });
 
-        tbody.innerHTML = res.data.map(c => `
-            <tr>
-                <td>#${c.customer_id}</td>
-                <td><strong>${escapeHTML(c.name)}</strong></td>
-                <td>${escapeHTML(c.phone)}</td>
-                <td>${escapeHTML(c.email || 'N/A')}</td>
-                <td>
-                    <button class="btn btn-outline btn-sm" onclick="openEditModal(${c.customer_id})">✏️ Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="confirmDelete(${c.customer_id})">🗑 Delete</button>
-                </td>
-            </tr>
-        `).join('');
-
+        tbody.innerHTML = res.data.map(c => {
+            const initials = (c.name || 'CU').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+            return `
+                <tr class="hover:bg-surface-container-low/70 transition-colors group">
+                    <td class="py-3.5 px-space-md font-mono text-[11px] text-on-surface-variant font-semibold">#${c.customer_id}</td>
+                    <td class="py-3.5 px-space-md">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold flex items-center justify-center shrink-0 text-xs shadow-sm">
+                                ${initials}
+                            </div>
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-semibold text-on-surface truncate">${escapeHTML(c.name)}</span>
+                                <span class="text-[10px] text-secondary font-medium flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[12px]">verified</span> Verified Client
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-space-md font-mono text-on-surface-variant">${escapeHTML(c.phone || 'N/A')}</td>
+                    <td class="py-3.5 px-space-md text-on-surface-variant truncate max-w-[180px]">${escapeHTML(c.email || 'N/A')}</td>
+                    <td class="py-3.5 px-space-md text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openEditModal(${c.customer_id})" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-secondary-fixed rounded-lg transition-colors cursor-pointer" title="Edit Profile" type="button">
+                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                            </button>
+                            <a href="services.html" class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg transition-colors inline-block" title="Work Orders History">
+                                <span class="material-symbols-outlined text-[18px]">history</span>
+                            </a>
+                            <button onclick="confirmDelete(${c.customer_id})" class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container rounded-lg transition-colors cursor-pointer" title="Delete Profile" type="button">
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     } catch (err) {
         Toast.error(err.message || 'Failed to load customers');
     }
 }
 
-async function handleAddCustomer(e) {
+function changePage(delta) {
+    const target = currentPage + delta;
+    if (target >= 1 && target <= totalPages) {
+        loadCustomers(target);
+    }
+}
+
+const debounceSearch = debounce(() => {
+    loadCustomers(1);
+}, 300);
+
+async function handleCustomerSubmit(e) {
     e.preventDefault();
-    const name = document.getElementById('cust_name').value.trim();
-    const phone = document.getElementById('cust_phone').value.trim();
-    const email = document.getElementById('cust_email').value.trim();
+    const name = document.getElementById('input-name').value.trim();
+    const phone = document.getElementById('input-phone').value.trim();
+    const email = document.getElementById('input-email').value.trim();
+
+    if (!name || !phone) {
+        Toast.error('Please enter name and phone number');
+        return;
+    }
 
     try {
         await API.post('/api/customers', { name, phone, email });
-        Toast.success('Customer added successfully!');
-        
-        document.getElementById('cust_name').value = '';
-        document.getElementById('cust_phone').value = '';
-        document.getElementById('cust_email').value = '';
-
+        Toast.success('Customer registered in MariaDB!');
+        document.getElementById('customer-form').reset();
         loadCustomers(1);
     } catch (err) {
-        Toast.error(err.message || 'Failed to add customer');
+        Toast.error(err.message || 'Failed to register customer');
     }
 }
 
@@ -171,56 +719,56 @@ function openEditModal(id) {
         title: `Edit Customer #${id}`,
         bodyHTML: `
             <div class="form-group" style="margin-bottom:12px;">
-                <label>Name</label>
-                <input type="text" id="edit_name" value="${escapeHTML(c.name || '')}">
+                <label>Full Name *</label>
+                <input type="text" id="edit_cust_name" value="${escapeHTML(c.name)}">
             </div>
             <div class="form-group" style="margin-bottom:12px;">
-                <label>Phone</label>
-                <input type="text" id="edit_phone" value="${escapeHTML(c.phone || '')}">
+                <label>Phone Number *</label>
+                <input type="text" id="edit_cust_phone" value="${escapeHTML(c.phone)}">
             </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="edit_email" value="${escapeHTML(c.email || '')}">
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Email Address</label>
+                <input type="email" id="edit_cust_email" value="${escapeHTML(c.email || '')}">
             </div>
         `,
+        confirmText: 'Update Profile',
         onConfirm: async () => {
-            const editName = document.getElementById('edit_name').value.trim();
-            const editPhone = document.getElementById('edit_phone').value.trim();
-            const editEmail = document.getElementById('edit_email').value.trim();
+            const name = document.getElementById('edit_cust_name').value.trim();
+            const phone = document.getElementById('edit_cust_phone').value.trim();
+            const email = document.getElementById('edit_cust_email').value.trim();
+
+            if (!name || !phone) {
+                Toast.error('Name and phone are required');
+                return;
+            }
 
             try {
-                await API.put(`/api/customers/${id}`, { name: editName, phone: editPhone, email: editEmail });
+                await API.put(`/api/customers/${id}`, { name, phone, email });
+                Toast.success('Customer profile updated');
                 Modal.close();
-                Toast.success('Customer updated successfully');
                 loadCustomers(currentPage);
             } catch (err) {
-                Toast.error(err.message || 'Update failed');
+                Toast.error(err.message || 'Failed to update customer');
             }
         }
     });
 }
 
 function confirmDelete(id) {
+    const c = customerDataMap[id];
     Modal.confirm({
         title: 'Delete Customer',
-        message: 'Are you sure you want to delete this customer? This will archive the record without destroying repair history.',
+        message: `Are you sure you want to delete ${c ? c.name : 'this customer'}?`,
         onConfirm: async () => {
             try {
                 await API.delete(`/api/customers/${id}`);
-                Toast.success('Customer archived');
+                Toast.success('Customer deleted');
                 loadCustomers(currentPage);
             } catch (err) {
-                Toast.error(err.message || 'Delete failed');
+                Toast.error(err.message || 'Failed to delete customer');
             }
         }
     });
-}
-
-function changePage(delta) {
-    const newPage = currentPage + delta;
-    if (newPage >= 1 && newPage <= totalPages) {
-        loadCustomers(newPage);
-    }
 }
 
 function logout() {
@@ -231,23 +779,7 @@ function escapeHTML(str) {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function debounce(func, timeout = 300){
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-  };
-}
-
-window.onload = () => {
-    loadCustomers(1);
-
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.oninput = debounce(() => loadCustomers(1), 300);
-    }
-};
+window.onload = () => loadCustomers(1);
 </script>
-
 </body>
 </html>

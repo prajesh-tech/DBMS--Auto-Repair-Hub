@@ -4,13 +4,27 @@ A full-stack, secure, modular web application engineered for managing auto repai
 
 ---
 
+## 🎨 Design System: Fidelity Modern
+
+The application features a complete redesign aligning with the **Fidelity Modern** design system specifications (`design.md`) and the official brand emblem logo:
+
+- **Brand Emblem Integration**: Centered brand emblem badge (`public/images/logo.png`) featuring the iconic mechanic gear silhouette, crossed wrenches, and glowing cap star integrated into the top-left header navigation and login splash screen.
+- **Color Palette & Visual Tokens**:
+  - **Surfaces**: Clean, high-legibility surfaces (`#fcf8f8`, `#ffffff`, `#f1edec`) and deep dark mode graphite surfaces (`#0d1117`, `#141a24`, `#1e2837`).
+  - **Primary & Secondary**: Tech cobalt blue (`#0050d7` / `#2b69fa` / `#3b82f6`) for high-impact interactive controls, buttons, and navigation highlights.
+  - **Tertiary & Accents**: High-contrast mechanic green (`#008918` / `#12ff39` / `#10b981`) for completed job statuses and subtle glowing accents.
+- **Typography**: Complete typography hierarchy built on **Google Inter** (`headline-lg` 32px/40px, bold weights, readable numeric metrics).
+- **Standards & Cross-Browser Compatibility**: Full support for standard properties (such as standard `background-clip: text` alongside `-webkit-background-clip: text` for gradient text) and dual-prefix backdrop filters.
+
+---
+
 ## 🚀 Tech Stack
 
 - **Backend**: Node.js, Express.js (MVC Architecture)
 - **Database**: MariaDB / MySQL (`mysql2/promise` connection pool with transactions)
 - **Authentication**: Dual-Token JWT (15m Access + 7d Refresh in `HttpOnly`, `SameSite=Strict` cookies) & `bcryptjs`
-- **Frontend**: Modern Vanilla HTML5, Glassmorphism CSS Design System (Google Inter font), JavaScript (Async/Fetch)
-- **Analytics**: Chart.js Interactive Timeframe Visualizations
+- **Frontend**: Modern Vanilla HTML5, Fidelity Modern Glassmorphism CSS (Google Inter font), JavaScript (Async/Fetch)
+- **Analytics**: Chart.js Interactive Timeframe Visualizations matching the Fidelity Modern palette
 - **PDF Generation**: PDFKit
 - **Testing**: Jest, Supertest (20/20 tests passing across 6 test suites)
 
@@ -22,9 +36,9 @@ A full-stack, secure, modular web application engineered for managing auto repai
 - **👥 Multi-Role User Access Control**: Granular UI rendering and backend authorization paths tailored for `Admin`, `Staff`, and `Mechanic` profiles.
 - **📦 Automated Inventory Deduction & Restoration**: MySQL transactions automatically decrement stock when parts are assigned to a service job, block zero-stock assignments, and restore inventory upon job deletion or part unlinking.
 - **📊 Standalone Financial Analytics**: Dedicated **📊 Analytics** module (`analytics.html`) with timeframe filters (`Today`, `This Week`, `This Month`, `This Year`, `All Time`), Parts vs. Labor revenue breakdown, and Chart.js trend curves.
-- **📱 Mobile-First Glassmorphism UI**: Frosted glass panels (`backdrop-filter: blur(20px)`), mobile hamburger drawer navigation, touch-optimized target sizes (`>= 44px`), and light/dark theme switching.
+- **📱 Responsive Navigation & Mobile Drawer**: Sticky top navigation bar across all pages with brand logo, `.hamburger-btn` toggle for mobile viewports, dark/light theme switching, and live user role badge.
 - **⏱️ Automatic Idle Session Timeout**: 30-minute user inactivity tracker with a 2-minute countdown warning modal.
-- **📄 Automated PDF Invoicing**: Streamed PDF invoices formatted with customer details, vehicle VINs, technician notes, and itemized material costs.
+- **📄 Automated PDF Invoicing**: Streamed PDF invoices formatted with customer details, vehicle VINs, technician notes, and itemized material costs (`.btn-sm` action buttons).
 
 ---
 
@@ -36,13 +50,17 @@ Auto_Repair_Hub/
 │   └── schema.sql              # Database creation & seed data migration script
 ├── public/                     # Static frontend web assets
 │   ├── css/
-│   │   └── style.css           # Glassmorphism design system (Google Inter, blurs, responsive drawer)
+│   │   └── style.css           # Fidelity Modern design system (Inter, tokens, dark mode)
+│   ├── images/
+│   │   ├── logo.png            # Transparent brand emblem logo
+│   │   └── logo-raw.jpg        # High-res raw emblem badge
 │   ├── js/
-│   │   ├── api.js              # Centralized API fetch wrapper with cookie auth & role restrictions
+│   │   ├── api.js              # Centralized API fetch wrapper, mobile drawer & theme toggle
 │   │   ├── idle.js             # 30-minute inactivity tracker & warning modal countdown
 │   │   ├── modal.js            # Custom modal dialog helper
 │   │   └── toast.js            # Toast notification helper
-│   ├── login.html              # Authenticated login page
+│   ├── favicon.ico             # Brand favicon icon
+│   ├── login.html              # Authenticated splash login page
 │   ├── index.html              # Operational Dashboard Overview
 │   ├── analytics.html          # Financial Analytics & Chart.js Visualization
 │   ├── customer.html           # Customer Management UI
@@ -74,20 +92,14 @@ Auto_Repair_Hub/
 │   │   ├── partRoutes.js
 │   │   └── dashboardRoutes.js
 │   └── server.js               # Express application entry point (cookie-parser, CORS, Helmet)
-├── tests/                      # Jest test suite (100% pass rate)
+├── tests/                      # Jest test suite
 │   ├── database.test.js
 │   ├── auth.test.js
 │   ├── customer.test.js
 │   ├── services.test.js
 │   ├── cars.test.js
 │   └── parts.test.js
-├── .spec/                      # SpecKit technical documentation
-│   ├── product-spec.md
-│   ├── architecture-spec.md
-│   ├── database-spec.md
-│   ├── api-spec.md
-│   ├── security-spec.md
-│   └── testing-spec.md
+├── design.md                   # Fidelity Modern design specifications
 ├── .env                        # Local environment configuration
 ├── .env.example                # Environment template
 ├── package.json
@@ -141,7 +153,7 @@ Open your browser and navigate to:
 
 ## 🧪 Running Automated Tests
 
-To execute the full Jest test suite across all 6 test files:
+To execute the Jest test suite:
 
 ```bash
 npm test

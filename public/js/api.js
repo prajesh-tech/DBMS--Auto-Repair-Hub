@@ -170,6 +170,7 @@ const API = {
     initTheme() {
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
+        document.documentElement.classList.toggle('dark', currentTheme === 'dark');
         const btn = document.getElementById('themeToggleBtn');
         if (btn) {
             btn.innerHTML = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
@@ -183,6 +184,7 @@ const API = {
         const current = document.documentElement.getAttribute('data-theme') || 'light';
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
+        document.documentElement.classList.toggle('dark', next === 'dark');
         localStorage.setItem('theme', next);
         const btn = document.getElementById('themeToggleBtn');
         if (btn) {
@@ -192,6 +194,23 @@ const API = {
 };
 
 window.API = API;
+window.toggleMobileNav = () => {
+    const drawer = document.getElementById('mobileDrawer');
+    if (drawer) {
+        drawer.classList.toggle('hidden');
+    }
+    const nav = document.querySelector('.nav-links');
+    if (nav) nav.classList.toggle('nav-open');
+};
+document.addEventListener('click', (e) => {
+    const nav = document.querySelector('.nav-links');
+    const btn = document.getElementById('hamburgerBtn');
+    if (nav && nav.classList.contains('nav-open')) {
+        if (!nav.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            nav.classList.remove('nav-open');
+        }
+    }
+});
 window.debounce = (fn, delay = 300) => {
     let timer = null;
     return (...args) => {

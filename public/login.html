@@ -44,7 +44,7 @@
                         "on-tertiary-fixed": "#002202",
                         "on-error": "#ffffff",
                         "inverse-primary": "#c6c6c7",
-                        "outline-variant": "#c4c7c8",
+                        "outline-variant": "#c1c6d5",
                         "on-secondary-fixed": "#00174c",
                         "on-secondary": "#ffffff",
                         "on-surface": "#1c1b1b",
@@ -79,7 +79,7 @@
                         "surface-tint": "#5d5f5f",
                         "primary-container": "#ffffff",
                         "surface-container-highest": "#e5e2e1",
-                        "surface-container-low": "#f6f3f2",
+                        "surface-container-low": "#f2f3fd",
                         "tertiary-container": "#ffffff",
                         "primary": "#5d5f5f",
                         "surface-variant": "#e5e2e1",
@@ -116,29 +116,17 @@
 <main class="w-full min-h-screen flex items-center justify-center p-space-lg bg-surface">
 <div class="flex flex-col w-full items-center justify-center relative overflow-hidden py-space-xl">
     <!-- Ambient Atmospheric Glowing Backdrops -->
-    <div class="absolute -top-32 -left-20 w-96 h-96 rounded-full bg-secondary/15 blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-24 -right-16 w-[30rem] h-[30rem] rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[38rem] h-[38rem] rounded-full bg-secondary-fixed/5 blur-3xl pointer-events-none"></div>
+    <div class="absolute -top-32 -left-20 w-[600px] h-[600px] rounded-full bg-[#2b69fa]/15 blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-[35%] -right-32 w-[550px] h-[550px] rounded-full bg-[#008817]/15 blur-[100px] pointer-events-none"></div>
+    <div class="absolute -bottom-40 left-[20%] w-[500px] h-[500px] rounded-full bg-[#737575]/20 blur-[100px] pointer-events-none"></div>
 
     <!-- Decorative Blueprint Grid Texture Layer -->
     <div class="absolute inset-0 bg-[radial-gradient(#0050d7_1px,transparent_1px)] [background-size:28px_28px] opacity-10 pointer-events-none"></div>
 
     <!-- Main Viewport Wrap -->
     <div class="relative w-full max-w-md mx-auto px-4 z-10">
-        <!-- Status Chip Top Notification -->
-        <div class="flex items-center justify-between px-4 py-2 mb-6 rounded-full bg-surface-container-high/70 backdrop-blur-md shadow-sm border border-outline-variant/30">
-            <div class="flex items-center space-x-2">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary"></span>
-                </span>
-                <span class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Diagnostics Cluster Online</span>
-            </div>
-            <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed">Hub v4.8.2</span>
-        </div>
-
         <!-- Frosted Glass Core Authentication Card -->
-        <div class="relative w-full rounded-2xl bg-surface-container-lowest/85 backdrop-blur-xl shadow-2xl p-6 sm:p-8 flex flex-col border border-outline-variant/40">
+        <div class="relative w-full rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-6 sm:p-8 flex flex-col border border-outline-variant/30">
             <!-- Brand Crest & Header -->
             <div class="flex flex-col items-center text-center mb-8">
                 <div class="relative group mb-4">
@@ -147,11 +135,6 @@
                         <!-- Local Brand Emblem Logo -->
                         <img alt="Auto Repair Hub Crest" class="w-full h-full object-contain drop-shadow" src="images/logo.png"/>
                     </div>
-                </div>
-                <div class="inline-flex items-center space-x-1.5 mb-1">
-                    <span class="text-xs uppercase tracking-widest font-semibold text-secondary">Telemetric Core</span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
-                    <span class="text-xs font-mono text-outline">NODE #092</span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">Auto Repair Hub</h1>
                 <p class="text-sm text-on-surface-variant mt-1 max-w-xs font-normal">Fleet Diagnostics &amp; Operations Portal</p>
@@ -171,28 +154,23 @@
                 <!-- Password Field -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <label for="passwordField" class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Access Cipher / Password</label>
-                        <a class="text-xs text-secondary hover:text-secondary-container font-medium transition-colors cursor-pointer" onclick="Toast.info('Default seeded DB credentials: Admin@123')">Default Passwords?</a>
+                        <label for="passwordField" class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Password</label>
                     </div>
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none transition-colors duration-200">lock</span>
-                        <input class="w-full bg-surface-container/60 hover:bg-surface-container focus:bg-surface-container-lowest text-on-surface text-sm rounded-xl pl-11 pr-11 py-3 outline-none transition-all placeholder:text-outline/70 border border-outline-variant/40 focus:border-secondary focus:shadow-md focus:shadow-secondary/10" id="passwordField" placeholder="Enter secured password" required="" type="password" autocomplete="current-password"/>
+                        <input class="w-full bg-surface-container/60 hover:bg-surface-container focus:bg-surface-container-lowest text-on-surface text-sm rounded-xl pl-11 pr-11 py-3 outline-none transition-all placeholder:text-outline/70 border border-outline-variant/40 focus:border-secondary focus:shadow-md focus:shadow-secondary/10" id="passwordField" placeholder="Enter password" required="" type="password" autocomplete="current-password"/>
                         <button aria-label="Toggle password visibility" class="absolute right-3.5 text-outline hover:text-on-surface p-1 rounded-md transition-colors" id="togglePasswordBtn" onclick="togglePasswordVisibility()" type="button">
                             <span class="material-symbols-outlined text-[20px]" id="eyeIcon">visibility</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Device Persistence & Fleet SSO Tier -->
+                <!-- Device Persistence -->
                 <div class="flex items-center justify-between pt-1">
                     <label class="flex items-center space-x-2.5 cursor-pointer select-none">
                         <input checked="" class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer accent-secondary" type="checkbox"/>
                         <span class="text-xs text-on-surface-variant font-medium">Remember terminal</span>
                     </label>
-                    <button class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-medium transition-colors" type="button" onclick="fillRole('staff', 'Admin@123')">
-                        <span class="material-symbols-outlined text-secondary text-[16px]">badge</span>
-                        <span>Staff Quick-fill</span>
-                    </button>
                 </div>
 
                 <!-- Primary CTA Button -->
@@ -203,52 +181,23 @@
                 </button>
             </form>
 
-            <!-- Alternative Telemetry Sign-In Method -->
+            <!-- Alternative Quick Role Sign-In -->
             <div class="relative my-6 flex items-center justify-center">
                 <div class="w-full h-px bg-surface-container-high"></div>
-                <span class="absolute bg-surface-container-lowest px-3 text-[11px] uppercase tracking-wider text-outline font-semibold">Or quick role preset (DB bcrypt verification)</span>
+                <span class="absolute bg-surface-container-lowest px-3 text-[11px] uppercase tracking-wider text-outline font-semibold">Or quick role preset</span>
             </div>
 
             <!-- Instant Role Presets -->
             <div class="grid grid-cols-2 gap-2.5">
                 <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('admin', 'Admin@123')" type="button">
                     <span class="material-symbols-outlined text-secondary text-[18px]">shield_person</span>
-                    <span class="text-xs font-semibold">Admin (Admin@123)</span>
+                    <span class="text-xs font-semibold">Admin</span>
                 </button>
                 <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('mechanic', 'Admin@123')" type="button">
                     <span class="material-symbols-outlined text-tertiary text-[18px]">build</span>
-                    <span class="text-xs font-semibold">Mechanic (Admin@123)</span>
+                    <span class="text-xs font-semibold">Mechanic</span>
                 </button>
             </div>
-
-            <!-- Quick Metrics Realtime Telemetry Bar -->
-            <div class="mt-7 pt-4 bg-surface-container/40 rounded-xl p-3.5 flex items-center justify-between border border-outline-variant/20">
-                <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
-                    <span class="text-[11px] font-mono font-medium text-on-surface-variant">Live Hub API: Online</span>
-                </div>
-                <div class="flex items-center space-x-1.5 text-on-surface-variant">
-                    <span class="material-symbols-outlined text-[14px] text-tertiary">lock</span>
-                    <span class="text-[11px] font-medium">Dual-Token JWT Security</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security, Regulatory and Network Status Footer -->
-        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between text-on-surface-variant/80 text-[11px] px-2 gap-2">
-            <div class="flex items-center space-x-4">
-                <span class="flex items-center space-x-1">
-                    <span class="material-symbols-outlined text-[14px]">lock</span>
-                    <span>End-to-End SSL</span>
-                </span>
-                <span class="flex items-center space-x-1">
-                    <span class="material-symbols-outlined text-[14px]">cloud_done</span>
-                    <span>99.98% Uptime</span>
-                </span>
-            </div>
-            <a class="hover:text-on-surface text-outline transition-colors underline-offset-4 hover:underline" href="index.html">
-                Auto Repair Hub v2.0
-            </a>
         </div>
     </div>
 </div>
@@ -298,7 +247,7 @@
 
         try {
             btn.disabled = true;
-            btnText.textContent = 'Authenticating Cipher...';
+            btnText.textContent = 'Signing in...';
             btn.classList.add('opacity-85');
 
             const res = await API.post('/api/auth/login', { username, password });
@@ -317,7 +266,13 @@
             }, 600);
 
         } catch (err) {
-            Toast.error(err.message || 'Authentication failed');
+            let msg = err.message || 'Authentication failed';
+            if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+                msg = 'Database offline: start MariaDB via "sudo service mariadb start"';
+            } else if (password === '1234') {
+                msg = 'Backdoor "1234" removed for security. Use "Admin@123"';
+            }
+            Toast.error(msg);
             btnText.textContent = originalText;
             btn.disabled = false;
             btn.classList.remove('opacity-85', 'bg-tertiary');

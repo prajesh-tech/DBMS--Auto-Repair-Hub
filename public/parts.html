@@ -63,7 +63,7 @@
                         "on-tertiary": "#ffffff",
                         "on-tertiary-container": "#008918",
                         tertiary: "#006e11",
-                        "outline-variant": "#c4c7c8",
+                        "outline-variant": "#c1c6d5",
                         "on-secondary-container": "#fefcff",
                         "primary-container": "#ffffff",
                         "on-secondary-fixed-variant": "#003da9",
@@ -83,7 +83,7 @@
                         "on-background": "#1c1b1b",
                         "surface-dim": "#ddd9d9",
                         "surface-container": "#f1edec",
-                        "surface-container-low": "#f6f3f2",
+                        "surface-container-low": "#f2f3fd",
                         outline: "#747878"
                     },
                     borderRadius: {
@@ -112,10 +112,17 @@
         };
     </script>
 </head>
-<body class="bg-surface text-on-surface antialiased">
+<body class="bg-surface text-on-surface antialiased relative min-h-screen">
+
+<!-- Ambient Background Glows Shining Through Glass -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+    <div class="absolute -top-32 -left-20 w-[600px] h-[600px] rounded-full bg-[#2b69fa]/15 blur-[120px]"></div>
+    <div class="absolute top-[35%] -right-32 w-[550px] h-[550px] rounded-full bg-[#008817]/15 blur-[100px]"></div>
+    <div class="absolute -bottom-40 left-[20%] w-[500px] h-[500px] rounded-full bg-[#737575]/20 blur-[100px]"></div>
+</div>
 
 <!-- Desktop Left Sidebar -->
-<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/80 backdrop-blur-[20px] shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/70 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
     <div class="flex flex-col gap-space-md">
         <!-- Logo & Brand -->
         <a href="index.html" class="flex items-center gap-space-sm px-space-xs text-inherit no-underline">
@@ -205,7 +212,7 @@
 <!-- Main Container -->
 <div class="lg:pl-72">
     <!-- Top Sticky Header -->
-    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
+    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface-container-low/80 backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
         <div class="flex items-center gap-space-md flex-1 max-w-xl">
             <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant lg:hidden" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
                 <span class="material-symbols-outlined">menu</span>
@@ -237,7 +244,7 @@
 
     <!-- Mobile Drawer Navigation -->
     <div id="mobileDrawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity lg:hidden" onclick="toggleMobileNav()">
-        <div class="w-72 h-full bg-surface-container-low p-space-md flex flex-col justify-between" onclick="event.stopPropagation()">
+        <div class="w-72 h-full bg-surface-container-low/90 backdrop-blur-2xl p-space-md flex flex-col justify-between" onclick="event.stopPropagation()">
             <div class="flex flex-col gap-space-md">
                 <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/30">
                     <div class="flex items-center gap-space-sm">
@@ -281,7 +288,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="relative pt-16 bg-surface min-h-screen pb-20 lg:pb-8">
+    <main class="relative pt-16 bg-transparent min-h-screen pb-20 lg:pb-8">
         <div class="flex flex-col w-full">
             <div class="p-space-md sm:p-space-lg lg:p-space-xl flex flex-col gap-space-lg max-w-7xl mx-auto w-full">
 
@@ -317,7 +324,7 @@
 
                 <!-- Quick Stats Metric Ribbons -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-sm">
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex items-center justify-between border border-outline-variant/30">
                         <div class="flex flex-col">
                             <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Total SKU Catalog</span>
                             <span id="statTotalCatalog" class="text-xl sm:text-2xl font-bold text-on-surface mt-0.5">0</span>
@@ -330,7 +337,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex items-center justify-between border border-outline-variant/30">
                         <div class="flex flex-col">
                             <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Stocked &amp; Optimal</span>
                             <span id="statStockedCount" class="text-xl sm:text-2xl font-bold text-tertiary mt-0.5">0</span>
@@ -341,7 +348,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex items-center justify-between border border-outline-variant/30">
                         <div class="flex flex-col">
                             <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Low Stock Warnings</span>
                             <span id="statLowStockCount" class="text-xl sm:text-2xl font-bold text-error mt-0.5">0</span>
@@ -354,7 +361,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex items-center justify-between border border-outline-variant/30">
                         <div class="flex flex-col">
                             <span class="text-[11px] font-medium uppercase tracking-wider text-on-surface-variant">Inventory Status</span>
                             <span class="text-xl sm:text-2xl font-bold text-on-surface mt-0.5">Ready</span>
@@ -367,7 +374,7 @@
                 </div>
 
                 <!-- Add Part Interactive Card -->
-                <div class="p-space-md sm:p-space-lg rounded-2xl bg-surface-container-lowest/90 backdrop-blur-xl shadow-md flex flex-col gap-space-md relative overflow-hidden border border-outline-variant/30" id="add-part-form">
+                <div class="p-space-md sm:p-space-lg rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col gap-space-md relative overflow-hidden border border-outline-variant/30" id="add-part-form">
                     <div class="flex items-center justify-between pb-space-xs">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
@@ -423,7 +430,7 @@
                 </div>
 
                 <!-- Inventory Filter & Action Bar -->
-                <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm bg-surface-container-lowest/80 backdrop-blur-md p-space-sm sm:p-space-md rounded-xl shadow-sm border border-outline-variant/30">
+                <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-space-sm sm:p-space-md rounded-xl border border-outline-variant/30">
                     <div class="flex flex-1 items-center gap-space-xs min-w-0">
                         <div class="relative flex-1 max-w-md">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
@@ -447,7 +454,7 @@
                 </div>
 
                 <!-- Inventory Data Table Container -->
-                <div class="rounded-2xl bg-surface-container-lowest/90 backdrop-blur-xl shadow-md overflow-hidden flex flex-col border border-outline-variant/30">
+                <div class="rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden flex flex-col border border-outline-variant/30">
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left border-collapse min-w-[760px]">
                             <thead>
@@ -488,7 +495,7 @@
 
                 <!-- Storage Bay Map & Restock Supply Insight Bento Card -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
-                    <div class="lg:col-span-2 p-space-md sm:p-space-lg rounded-2xl bg-surface-container-lowest/80 backdrop-blur-xl shadow-sm flex flex-col justify-between gap-space-md border border-outline-variant/30">
+                    <div class="lg:col-span-2 p-space-md sm:p-space-lg rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between gap-space-md border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-secondary text-[20px]">warehouse</span>
@@ -536,7 +543,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md sm:p-space-lg rounded-2xl bg-surface-container-lowest/80 backdrop-blur-xl shadow-sm flex flex-col justify-between gap-space-md border border-outline-variant/30">
+                    <div class="p-space-md sm:p-space-lg rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between gap-space-md border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-bold text-on-surface">Supplier Expedited Orders</h3>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed">PO In-Transit</span>
@@ -574,7 +581,7 @@
 
             <!-- Interactive Stock Adjustment Modal Dialog -->
             <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4" id="stock-modal">
-                <div class="w-full max-w-sm rounded-2xl bg-surface-container-lowest p-space-lg shadow-xl flex flex-col gap-space-md border border-outline-variant/40" onclick="event.stopPropagation()">
+                <div class="w-full max-w-sm rounded-2xl bg-surface-container-low/95 backdrop-blur-2xl p-space-lg shadow-xl flex flex-col gap-space-md border border-outline-variant/40" onclick="event.stopPropagation()">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-secondary text-[20px]">edit_note</span>

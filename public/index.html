@@ -63,7 +63,7 @@
                         "on-tertiary": "#ffffff",
                         "on-tertiary-container": "#008918",
                         tertiary: "#006e11",
-                        "outline-variant": "#c4c7c8",
+                        "outline-variant": "#c1c6d5",
                         "on-secondary-container": "#fefcff",
                         "primary-container": "#ffffff",
                         "on-secondary-fixed-variant": "#003da9",
@@ -82,8 +82,9 @@
                         "secondary-fixed": "#dbe1ff",
                         "on-background": "#1c1b1b",
                         "surface-dim": "#ddd9d9",
-                        "surface-container": "#f1edec",
-                        "surface-container-low": "#f6f3f2",
+                        "surface-container": "#ecedf7",
+                        "surface-container-low": "#f2f3fd",
+                        "surface-container-lowest": "#ffffff",
                         outline: "#747878"
                     },
                     borderRadius: {
@@ -112,10 +113,17 @@
         };
     </script>
 </head>
-<body class="bg-surface text-on-surface antialiased">
+<body class="bg-surface text-on-surface antialiased relative min-h-screen">
+
+<!-- Ambient Background Glows (Glass Depth Effect) -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[#737575]/20 blur-[100px]"></div>
+    <div class="absolute top-1/3 -right-40 w-[30rem] h-[30rem] rounded-full bg-[#2b69fa]/15 blur-[120px]"></div>
+    <div class="absolute -bottom-40 left-1/3 w-[28rem] h-[28rem] rounded-full bg-[#008817]/15 blur-[100px]"></div>
+</div>
 
 <!-- Desktop Left Sidebar -->
-<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/80 backdrop-blur-[20px] shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/70 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
     <div class="flex flex-col gap-space-md">
         <!-- Brand Header with Logo -->
         <a href="index.html" class="flex items-center gap-space-sm px-space-xs text-inherit no-underline">
@@ -204,9 +212,9 @@
 </aside>
 
 <!-- Main Container -->
-<div class="lg:pl-72">
+<div class="lg:pl-72 relative z-10">
     <!-- Top Sticky Header -->
-    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
+    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface-container-low/80 backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
         <div class="flex items-center gap-space-md flex-1 max-w-xl">
             <!-- Mobile Hamburger -->
             <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant lg:hidden" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
@@ -327,7 +335,7 @@
             <!-- Primary Metric KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
                 <!-- KPI 1: Revenue -->
-                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                <div class="group relative rounded-xl bg-surface-container-low/75 backdrop-blur-2xl p-space-md shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary rounded-l-xl"></div>
                     <div class="flex items-start justify-between">
                         <div class="w-12 h-12 rounded-xl bg-secondary-fixed/40 flex items-center justify-center text-secondary shadow-sm group-hover:scale-105 transition-transform">
@@ -345,14 +353,14 @@
                             <span>Total Completed Revenue</span>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-lowest/80 px-2 py-1.5 rounded-lg">
                         <span>Financial Ledger</span>
                         <a href="analytics.html" class="text-secondary font-semibold hover:underline">Audited →</a>
                     </div>
                 </div>
 
                 <!-- KPI 2: Total Customers -->
-                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                <div class="group relative rounded-xl bg-surface-container-low/75 backdrop-blur-2xl p-space-md shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-fixed-dim rounded-l-xl"></div>
                     <div class="flex items-start justify-between">
                         <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm group-hover:scale-105 transition-transform">
@@ -372,14 +380,14 @@
                             <span class="text-tertiary font-semibold">Active</span>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-lowest/80 px-2 py-1.5 rounded-lg">
                         <span>Client Management</span>
                         <a href="customer.html" class="text-secondary font-semibold hover:underline">Manage →</a>
                     </div>
                 </div>
 
                 <!-- KPI 3: Fleet Vehicles -->
-                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                <div class="group relative rounded-xl bg-surface-container-low/75 backdrop-blur-2xl p-space-md shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-container rounded-l-xl"></div>
                     <div class="flex items-start justify-between">
                         <div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shadow-sm group-hover:scale-105 transition-transform">
@@ -399,14 +407,14 @@
                             <span class="text-secondary font-semibold">Live</span>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-lowest/80 px-2 py-1.5 rounded-lg">
                         <span>Fleet Directory</span>
                         <a href="cars.html" class="text-secondary font-semibold hover:underline">Fleet Map →</a>
                     </div>
                 </div>
 
                 <!-- KPI 4: Active Service Jobs -->
-                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                <div class="group relative rounded-xl bg-surface-container-low/75 backdrop-blur-2xl p-space-md shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary-fixed-dim rounded-l-xl"></div>
                     <div class="flex items-start justify-between">
                         <div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:scale-105 transition-transform">
@@ -426,7 +434,7 @@
                             <span class="text-on-surface-variant font-semibold">Bay Queue</span>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-lowest/80 px-2 py-1.5 rounded-lg">
                         <span>Work Order Board</span>
                         <a href="services.html" class="text-secondary font-semibold hover:underline">Board →</a>
                     </div>
@@ -441,7 +449,7 @@
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
                     <!-- Module 1: Customers -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="customer.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="customer.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-secondary mb-3 shadow-inner group-hover:bg-secondary-fixed transition-colors">
                             <span class="material-symbols-outlined text-[28px]">group</span>
                         </div>
@@ -450,7 +458,7 @@
                     </a>
 
                     <!-- Module 2: Employees -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="employee.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="employee.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface mb-3 shadow-inner group-hover:bg-primary-fixed transition-colors">
                             <span class="material-symbols-outlined text-[28px]">engineering</span>
                         </div>
@@ -459,7 +467,7 @@
                     </a>
 
                     <!-- Module 3: Vehicles -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="cars.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="cars.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-secondary mb-3 shadow-inner group-hover:bg-secondary-fixed transition-colors">
                             <span class="material-symbols-outlined text-[28px]">directions_car</span>
                         </div>
@@ -468,7 +476,7 @@
                     </a>
 
                     <!-- Module 4: Service Jobs -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="services.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="services.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface mb-3 shadow-inner group-hover:bg-surface-container-highest transition-colors">
                             <span class="material-symbols-outlined text-[28px]">build</span>
                         </div>
@@ -477,7 +485,7 @@
                     </a>
 
                     <!-- Module 5: Inventory Parts -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 relative border border-outline-variant/30 no-underline text-inherit" href="parts.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 relative border border-outline-variant/30 no-underline text-inherit" href="parts.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant mb-3 shadow-inner group-hover:bg-surface-container-high transition-colors">
                             <span class="material-symbols-outlined text-[28px]">inventory_2</span>
                         </div>
@@ -486,7 +494,7 @@
                     </a>
 
                     <!-- Module 6: Financial Analytics -->
-                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low shadow-sm transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="analytics.html">
+                    <a class="group flex flex-col items-center justify-center text-center p-4 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] hover:bg-surface-container/70 transition-all transform hover:-translate-y-0.5 border border-outline-variant/30 no-underline text-inherit" href="analytics.html">
                         <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-secondary mb-3 shadow-inner group-hover:bg-secondary-fixed transition-colors">
                             <span class="material-symbols-outlined text-[28px]">insights</span>
                         </div>
@@ -499,7 +507,7 @@
             <!-- Main Content Split: Recent Service Jobs Table & Workshop Bay Status -->
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-space-lg">
                 <!-- Recent Service Jobs Table (2 cols on xl) -->
-                <div class="xl:col-span-2 rounded-xl bg-surface-container-lowest shadow-sm p-space-md sm:p-space-lg flex flex-col justify-between border border-outline-variant/30">
+                <div class="xl:col-span-2 rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-space-md sm:p-space-lg flex flex-col justify-between border border-outline-variant/30">
                     <div>
                         <!-- Table Header & Controls -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md gap-3">
@@ -508,8 +516,8 @@
                                 <p class="text-xs text-on-surface-variant">Live workshop assignments and completion statuses.</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="flex items-center bg-surface-container-high rounded-lg p-0.5 text-xs font-medium text-on-surface-variant">
-                                    <button onclick="filterRecentTable('all', this)" class="tbl-filter px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface font-semibold shadow-xs cursor-pointer">All</button>
+                                <div class="flex items-center bg-surface-container-lowest/90 backdrop-blur-xl border border-outline-variant/30 rounded-lg p-0.5 text-xs font-medium text-on-surface-variant">
+                                    <button onclick="filterRecentTable('all', this)" class="tbl-filter px-2.5 py-1 rounded bg-secondary text-on-secondary font-semibold shadow-xs cursor-pointer">All</button>
                                     <button onclick="filterRecentTable('Pending', this)" class="tbl-filter px-2.5 py-1 rounded hover:text-on-surface cursor-pointer">Pending</button>
                                     <button onclick="filterRecentTable('In Progress', this)" class="tbl-filter px-2.5 py-1 rounded hover:text-on-surface cursor-pointer">In Progress</button>
                                     <button onclick="filterRecentTable('Completed', this)" class="tbl-filter px-2.5 py-1 rounded hover:text-on-surface cursor-pointer">Completed</button>
@@ -558,7 +566,7 @@
                 <!-- Live Workshop Bay Telemetry & Quick Diagnostics Widget -->
                 <div class="flex flex-col gap-space-md">
                     <!-- Workshop Bay Live Status -->
-                    <div class="rounded-xl bg-surface-container-lowest shadow-sm p-space-md flex flex-col justify-between border border-outline-variant/30">
+                    <div class="rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-space-md flex flex-col justify-between border border-outline-variant/30">
                         <div>
                             <div class="flex items-center justify-between pb-3">
                                 <div>
@@ -571,7 +579,7 @@
                             <!-- Bay Cards Grid -->
                             <div class="grid grid-cols-2 gap-2 mt-2">
                                 <!-- Bay 1 -->
-                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+                                <div class="p-3 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-on-surface">Bay 01</span>
                                         <span class="w-2 h-2 rounded-full bg-secondary"></span>
@@ -586,7 +594,7 @@
                                 </div>
 
                                 <!-- Bay 2 -->
-                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+                                <div class="p-3 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-on-surface">Bay 02</span>
                                         <span class="w-2 h-2 rounded-full bg-secondary"></span>
@@ -601,7 +609,7 @@
                                 </div>
 
                                 <!-- Bay 3 -->
-                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+                                <div class="p-3 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-on-surface">Bay 03</span>
                                         <span class="w-2 h-2 rounded-full bg-primary"></span>
@@ -616,7 +624,7 @@
                                 </div>
 
                                 <!-- Bay 4 -->
-                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
+                                <div class="p-3 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/20">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-on-surface">Bay 04</span>
                                         <span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
@@ -639,7 +647,7 @@
                     </div>
 
                     <!-- Quick Telemetry & Diagnostics Spotlight Card -->
-                    <div class="rounded-xl bg-surface-container-lowest shadow-sm p-space-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                    <div class="rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-space-md flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
                         <div class="flex items-start justify-between">
                             <div class="flex flex-col">
                                 <span class="text-xs font-bold text-on-surface">CAN-Bus Diagnostic Stream</span>

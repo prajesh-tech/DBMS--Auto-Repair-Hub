@@ -63,7 +63,7 @@
                         "on-tertiary": "#ffffff",
                         "on-tertiary-container": "#008918",
                         tertiary: "#006e11",
-                        "outline-variant": "#c4c7c8",
+                        "outline-variant": "#c1c6d5",
                         "on-secondary-container": "#fefcff",
                         "primary-container": "#ffffff",
                         "on-secondary-fixed-variant": "#003da9",
@@ -82,8 +82,9 @@
                         "secondary-fixed": "#dbe1ff",
                         "on-background": "#1c1b1b",
                         "surface-dim": "#ddd9d9",
-                        "surface-container": "#f1edec",
-                        "surface-container-low": "#f6f3f2",
+                        "surface-container": "#ecedf7",
+                        "surface-container-low": "#f2f3fd",
+                        "surface-container-lowest": "#ffffff",
                         outline: "#747878"
                     },
                     borderRadius: {
@@ -112,10 +113,17 @@
         };
     </script>
 </head>
-<body class="bg-surface text-on-surface antialiased">
+<body class="bg-surface text-on-surface antialiased relative min-h-screen">
+
+<!-- Ambient Background Glows (Glass Depth Effect) -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[#737575]/20 blur-[100px]"></div>
+    <div class="absolute top-1/3 -right-40 w-[30rem] h-[30rem] rounded-full bg-[#2b69fa]/15 blur-[120px]"></div>
+    <div class="absolute -bottom-40 left-1/3 w-[28rem] h-[28rem] rounded-full bg-[#008817]/15 blur-[100px]"></div>
+</div>
 
 <!-- Desktop Left Sidebar -->
-<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/80 backdrop-blur-[20px] shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/70 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.15)] z-50 hidden lg:flex flex-col justify-between p-space-md border-r border-outline-variant/30">
     <div class="flex flex-col gap-space-md">
         <!-- Brand Header with Logo -->
         <a href="index.html" class="flex items-center gap-space-sm px-space-xs text-inherit no-underline">
@@ -203,9 +211,9 @@
 </aside>
 
 <!-- Main Container -->
-<div class="lg:pl-72">
+<div class="lg:pl-72 relative z-10">
     <!-- Top Sticky Header -->
-    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
+    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface-container-low/80 backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
         <div class="flex items-center gap-space-md flex-1 max-w-xl">
             <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant lg:hidden" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
                 <span class="material-symbols-outlined">menu</span>
@@ -313,7 +321,7 @@
 
                 <!-- Quick Stats Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium text-on-surface-variant">Total Accounts</span>
                             <span class="p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed material-symbols-outlined text-[18px]">group</span>
@@ -324,7 +332,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium text-on-surface-variant">Fleet &amp; VIP Accounts</span>
                             <span class="p-1.5 rounded-lg bg-surface-container-highest text-on-surface material-symbols-outlined text-[18px]">local_shipping</span>
@@ -335,7 +343,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium text-on-surface-variant">Average Vehicle / Client</span>
                             <span class="p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed material-symbols-outlined text-[18px]">directions_car</span>
@@ -346,7 +354,7 @@
                         </div>
                     </div>
 
-                    <div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col justify-between relative overflow-hidden border border-outline-variant/30">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium text-on-surface-variant">Retention Rate</span>
                             <span class="p-1.5 rounded-lg bg-surface-container-highest text-on-surface material-symbols-outlined text-[18px]">verified</span>
@@ -359,7 +367,7 @@
                 </div>
 
                 <!-- Quick Register Customer Card (Collapsible) -->
-                <div class="rounded-2xl bg-surface-container-low/90 backdrop-blur-xl p-space-md sm:p-space-lg shadow-sm flex flex-col gap-space-md transition-all duration-300 border border-outline-variant/30" id="quick-register-panel">
+                <div class="rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] p-space-md sm:p-space-lg flex flex-col gap-space-md transition-all duration-300 border border-outline-variant/30" id="quick-register-panel">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
@@ -432,13 +440,13 @@
                 </div>
 
                 <!-- Filter & Search Controls -->
-                <div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md border border-outline-variant/30">
+                <div class="p-space-md rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md border border-outline-variant/30">
                     <div class="relative flex-1">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
-                        <input class="w-full h-10 pl-9 pr-4 text-xs bg-surface-container-high rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all border border-outline-variant/20" id="customer-search-input" oninput="debounceSearch()" placeholder="Search by customer name, phone, or email..." type="text"/>
+                        <input class="w-full h-10 pl-9 pr-4 text-xs bg-surface-container-lowest/90 backdrop-blur-xl rounded-xl text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-1 focus:ring-secondary transition-all border border-outline-variant/30" id="customer-search-input" oninput="debounceSearch()" placeholder="Search by customer name, phone, or email..." type="text"/>
                     </div>
                     <div class="flex items-center gap-space-sm flex-wrap">
-                        <button onclick="loadCustomers(1)" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl transition-colors cursor-pointer" id="refresh-table-btn" title="Sync database" type="button">
+                        <button onclick="loadCustomers(1)" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-surface-container-lowest/90 backdrop-blur-xl hover:bg-surface-container-high text-on-surface rounded-xl transition-colors cursor-pointer border border-outline-variant/30" id="refresh-table-btn" title="Sync database" type="button">
                             <span class="material-symbols-outlined text-[16px] text-on-surface-variant" id="refresh-icon">sync</span>
                             <span>Refresh</span>
                         </button>
@@ -446,8 +454,8 @@
                 </div>
 
                 <!-- Customer Database Table Container -->
-                <div class="rounded-2xl bg-surface-container-lowest shadow-sm overflow-hidden flex flex-col border border-outline-variant/30">
-                    <div class="p-space-md bg-surface-container-low flex items-center justify-between border-b border-outline-variant/20">
+                <div class="rounded-2xl bg-surface-container-low/75 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden flex flex-col border border-outline-variant/30">
+                    <div class="p-space-md bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-between border-b border-outline-variant/20">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-[20px] text-secondary">database</span>
                             <span class="text-xs sm:text-sm font-bold text-on-surface">Verified Customer Records</span>

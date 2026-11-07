@@ -3,9 +3,21 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="description" content="Manage technicians, mechanics, administrative staff directory, roles, and compensation in Auto Repair Hub."/>
     <meta content="web_dashboard" name="shell-type"/>
     <title>Auto Repair Hub - Employee &amp; Staff Directory</title>
-    <link rel="icon" type="image/png" href="images/logo.png"/>
+    <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -62,7 +74,7 @@
                         "on-surface": "#1c1b1b",
                         secondary: "#0050d7",
                         "on-tertiary-fixed": "#002202",
-                        inverse-surface: "#313030",
+                        "inverse-surface": "#313030",
                         "surface-variant": "#e5e2e1",
                         "on-secondary-fixed": "#00174c",
                         "secondary-fixed-dim": "#b4c5ff",
@@ -90,7 +102,7 @@
                         "space-md": "1rem"
                     },
                     fontFamily: {
-                        "headline-lg": ["Inter", "sans-serif"]
+                        "headline-lg": ["Inter"]
                     },
                     fontSize: {
                         "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }]
@@ -107,7 +119,7 @@
     <div class="flex flex-col gap-space-md">
         <!-- Brand Header with Logo -->
         <a href="index.html" class="flex items-center gap-space-sm px-space-xs text-inherit no-underline">
-            <img alt="Auto Repair Hub Logo" class="h-9 w-9 rounded-full object-contain shrink-0 shadow-sm" src="images/logo.png"/>
+            <img alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-md object-contain shrink-0 shadow-sm" src="images/logo.png"/>
             <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-space-xs">
                     <span class="text-sm font-semibold tracking-tight text-on-surface truncate">Auto Repair Hub</span>
@@ -117,311 +129,431 @@
             </div>
         </a>
 
-        <!-- Navigation Links -->
-        <nav class="flex flex-col gap-space-xs nav-links">
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="index.html">
+        <!-- Navigation Links with exact active states & badge chips -->
+        <nav class="flex flex-col gap-space-xs" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="dashboard" href="index.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     <span>Dashboard</span>
                 </div>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant">Live</span>
             </a>
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="analytics.html">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="analytics.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">analytics</span>
                     <span>Analytics</span>
                 </div>
             </a>
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="customer.html">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="customers" href="customer.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">group</span>
                     <span>Customers</span>
                 </div>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed">142</span>
             </a>
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="cars.html">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="vehicle-fleet" href="cars.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">directions_car</span>
                     <span>Vehicle Fleet</span>
                 </div>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant">86</span>
             </a>
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="services.html">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="service-jobs" href="services.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">build</span>
                     <span>Service Jobs</span>
                 </div>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container">12 Act</span>
             </a>
-            <a class="nav-link flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" href="parts.html">
+            <a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="inventory-parts" href="parts.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">inventory_2</span>
                     <span>Inventory Parts</span>
                 </div>
             </a>
-            <a aria-current="page" class="nav-link active flex items-center justify-between px-space-sm py-2 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-sm" href="employee.html">
+            <a aria-current="page" class="flex items-center justify-between px-space-sm py-2 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-sm" data-path="employees" href="employee.html">
                 <div class="flex items-center gap-space-sm">
                     <span class="material-symbols-outlined text-[20px]">badge</span>
                     <span>Employees</span>
                 </div>
+                <span id="navEmpCountBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed">8 Cert</span>
             </a>
         </nav>
     </div>
 
-    <!-- Bottom Controls: Theme Mode & User Badge -->
+    <!-- Bottom Controls: Appearance & User Profile -->
     <div class="flex flex-col gap-space-sm">
         <div class="flex items-center justify-between p-space-xs bg-surface-container rounded-lg border border-outline-variant/30">
             <span class="text-xs font-medium text-on-surface-variant px-space-xs">Appearance</span>
-            <button id="themeToggleBtn" onclick="API.toggleTheme()" class="px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface text-xs font-semibold shadow-xs hover:bg-surface-container transition-colors cursor-pointer" type="button">
-                🌙 Dark
-            </button>
+            <div class="flex items-center p-0.5 bg-surface-container-highest rounded-full">
+                <button onclick="if(document.documentElement.classList.contains('dark')) API.toggleTheme()" class="flex items-center justify-center w-6 h-6 rounded-full bg-surface-container-lowest text-on-surface shadow-[0_1px_4px_rgba(0,0,0,0.06)]" type="button" title="Light Theme">
+                    <span class="material-symbols-outlined text-[14px]">light_mode</span>
+                </button>
+                <button id="themeToggleBtn" onclick="API.toggleTheme()" class="flex items-center justify-center w-6 h-6 rounded-full text-on-surface-variant hover:text-on-surface" type="button" title="Toggle Theme">
+                    <span class="material-symbols-outlined text-[14px]">dark_mode</span>
+                </button>
+            </div>
         </div>
-
         <div class="flex items-center justify-between p-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/30">
             <div class="flex items-center gap-space-xs min-w-0">
-                <div class="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center shrink-0 text-secondary font-bold">
-                    👨‍🔧
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
                 </div>
                 <div class="flex flex-col min-w-0">
                     <span id="userBadge" class="text-xs font-semibold text-on-surface truncate">Admin</span>
-                    <span class="text-[10px] text-on-surface-variant truncate">HR Administration</span>
+                    <span class="text-[11px] text-on-surface-variant truncate">HR Administration</span>
                 </div>
             </div>
-            <button onclick="logout()" class="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/30 rounded-lg transition-colors" title="Sign Out">
+            <button onclick="logout()" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container rounded transition-colors" title="Sign out" type="button">
                 <span class="material-symbols-outlined text-[18px]">logout</span>
             </button>
         </div>
     </div>
 </aside>
 
-<!-- Mobile Navigation Header -->
-<header class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface-container-low/90 backdrop-blur-md z-40 px-space-md flex items-center justify-between border-b border-outline-variant/30">
-    <div class="flex items-center gap-space-sm">
-        <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-        <div class="flex items-center gap-2">
-            <img alt="Auto Repair Hub" class="h-7 w-7 rounded-full object-contain" src="images/logo.png"/>
-            <span class="font-bold text-sm tracking-tight text-on-surface">Auto Repair Hub</span>
-        </div>
-    </div>
-    <div class="flex items-center gap-2">
-        <button onclick="API.toggleTheme()" class="p-2 text-on-surface-variant hover:text-on-surface">
-            <span class="material-symbols-outlined text-[20px]">dark_mode</span>
-        </button>
-        <button onclick="logout()" class="p-2 text-on-surface-variant hover:text-error">
-            <span class="material-symbols-outlined text-[20px]">logout</span>
-        </button>
-    </div>
-</header>
-
-<!-- Mobile Drawer Navigation -->
-<div id="mobileDrawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity lg:hidden" onclick="toggleMobileNav()">
-    <div class="w-72 h-full bg-surface-container-low p-space-md flex flex-col justify-between" onclick="event.stopPropagation()">
-        <div class="flex flex-col gap-space-md">
-            <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/30">
-                <div class="flex items-center gap-space-sm">
-                    <img src="images/logo.png" alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-full">
-                    <span class="font-bold text-on-surface">Auto Repair Hub</span>
-                </div>
-                <button onclick="toggleMobileNav()" class="p-1 text-on-surface-variant">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <nav class="flex flex-col gap-1">
-                <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
-                </a>
-                <a href="analytics.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">analytics</span> Analytics
-                </a>
-                <a href="customer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">group</span> Customers
-                </a>
-                <a href="cars.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">directions_car</span> Vehicle Fleet
-                </a>
-                <a href="services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">build</span> Service Jobs
-                </a>
-                <a href="parts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
-                    <span class="material-symbols-outlined text-[20px]">inventory_2</span> Inventory Parts
-                </a>
-                <a href="employee.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary-container text-on-secondary-container">
-                    <span class="material-symbols-outlined text-[20px]">badge</span> Employees
-                </a>
-            </nav>
-        </div>
-        <div class="pt-space-sm border-t border-outline-variant/30">
-            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-2 text-sm text-error font-medium hover:bg-error-container/30 rounded-lg">
-                <span class="material-symbols-outlined text-[18px]">logout</span> Log Out
+<!-- Desktop Content Wrapper -->
+<div class="lg:pl-72">
+    <!-- Top Sticky Header -->
+    <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md border-b border-outline-variant/30">
+        <div class="flex items-center gap-space-md flex-1 max-w-xl">
+            <!-- Mobile Hamburger -->
+            <button class="hamburger-btn p-2 -ml-2 text-on-surface-variant lg:hidden" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
+                <span class="material-symbols-outlined">menu</span>
             </button>
-        </div>
-    </div>
-</div>
-
-<!-- Main Content Area -->
-<main class="lg:ml-72 min-h-screen pt-20 lg:pt-8 p-space-md lg:p-space-xl flex flex-col gap-space-lg pb-24 lg:pb-space-xl">
-
-    <!-- Page Header & Action Trigger -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
-        <div>
-            <div class="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
-                <span>Human Resources</span>
-                <span>•</span>
-                <span>Role Permissions (Admin)</span>
+            <!-- Mobile Brand -->
+            <div class="flex items-center gap-space-xs lg:hidden">
+                <img alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-md object-contain shrink-0 shadow-sm" src="images/logo.png"/>
+                <span class="text-sm font-bold text-on-surface">Auto Repair Hub</span>
             </div>
-            <h1 class="text-2xl lg:text-3xl font-bold tracking-tight text-on-surface">Personnel &amp; Staff Directory</h1>
-            <p class="text-xs text-on-surface-variant mt-0.5">Manage technician credentials, service roles, phone registries, and compensation.</p>
+
+            <!-- Global Search Input -->
+            <div class="relative w-full hidden sm:block">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input id="searchInput" oninput="debounceSearch()" onkeyup="if(event.key==='Enter') loadEmployees(1)" class="w-full h-10 pl-9 pr-4 text-xs bg-surface-container-high rounded-lg text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all border border-outline-variant/30" placeholder="Search by name, role, phone..." type="text"/>
+            </div>
         </div>
 
-        <div class="flex items-center gap-space-xs">
-            <button onclick="toggleAddEmployeeForm()" class="flex items-center gap-space-xs px-4 py-2.5 bg-secondary hover:bg-secondary/90 text-on-secondary rounded-lg text-xs font-semibold shadow-sm transition-all">
-                <span class="material-symbols-outlined text-[18px]">person_add</span>
+        <div class="flex items-center gap-space-sm">
+            <div class="hidden md:flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface-container text-xs">
+                <span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+                <span class="text-on-surface text-[11px] font-medium">HR Portal Online</span>
+            </div>
+            <div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[11px] font-semibold">
+                <span class="material-symbols-outlined text-[14px]">security</span>
+                <span>RBAC Verified</span>
+            </div>
+            <button onclick="toggleAddEmployeeDrawer()" class="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-secondary text-on-secondary text-xs font-semibold rounded-lg hover:bg-secondary-container transition-colors shadow-sm cursor-pointer" type="button">
+                <span class="material-symbols-outlined text-[16px]">add</span>
                 <span>Add Employee</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Quick Telemetric Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
-        <div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-                <span class="text-xs font-medium uppercase tracking-wider">Total Staff</span>
-                <span class="material-symbols-outlined text-[20px] text-secondary">groups</span>
-            </div>
-            <div>
-                <span id="statStaffTotal" class="text-2xl font-bold tracking-tight text-on-surface">--</span>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">Registered personnel</p>
-            </div>
-        </div>
-
-        <div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-                <span class="text-xs font-medium uppercase tracking-wider">Mechanics Active</span>
-                <span class="material-symbols-outlined text-[20px] text-tertiary">handyman</span>
-            </div>
-            <div>
-                <span id="statMechanics" class="text-2xl font-bold tracking-tight text-on-surface">--</span>
-                <p class="text-[11px] text-tertiary mt-0.5">Certified service techs</p>
-            </div>
-        </div>
-
-        <div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-                <span class="text-xs font-medium uppercase tracking-wider">Annual Payroll</span>
-                <span class="material-symbols-outlined text-[20px] text-secondary">payments</span>
-            </div>
-            <div>
-                <span id="statPayroll" class="text-2xl font-bold tracking-tight text-on-surface">--</span>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">Total salary commitment</p>
-            </div>
-        </div>
-
-        <div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/20 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-                <span class="text-xs font-medium uppercase tracking-wider">Access Clearance</span>
-                <span class="material-symbols-outlined text-[20px] text-primary">security</span>
-            </div>
-            <div>
-                <span class="text-2xl font-bold tracking-tight text-on-surface">RBAC</span>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">Role-based data isolation</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Collapsible Add Employee Card -->
-    <div id="addEmployeeCard" class="hidden rounded-xl bg-surface-container-lowest border border-outline-variant/30 p-space-lg shadow-sm transition-all">
-        <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/20 mb-space-md">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
-                    <span class="material-symbols-outlined text-[20px]">person_add</span>
-                </div>
-                <div>
-                    <h2 class="text-base font-semibold text-on-surface">Onboard New Team Member</h2>
-                    <p class="text-xs text-on-surface-variant">Register technician, advisor, or administrator details into the HR registry.</p>
-                </div>
-            </div>
-            <button onclick="toggleAddEmployeeForm()" class="text-on-surface-variant hover:text-on-surface p-1">
-                <span class="material-symbols-outlined">close</span>
+            <button onclick="API.toggleTheme()" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer" title="Toggle Theme" type="button">
+                <span class="material-symbols-outlined text-[20px]">dark_mode</span>
             </button>
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+            </div>
         </div>
+    </header>
 
-        <form id="addEmployeeForm" onsubmit="handleAddEmployee(event)" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-xs font-medium text-on-surface-variant">Full Legal Name *</label>
-                    <input type="text" id="emp_name" placeholder="Alex Rivera" required class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+    <!-- Mobile Drawer Navigation -->
+    <div id="mobileDrawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity lg:hidden" onclick="toggleMobileNav()">
+        <div class="w-72 h-full bg-surface-container-low p-space-md flex flex-col justify-between" onclick="event.stopPropagation()">
+            <div class="flex flex-col gap-space-md">
+                <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/30">
+                    <div class="flex items-center gap-space-sm">
+                        <img src="images/logo.png" alt="Auto Repair Hub Logo" class="h-8 w-8 rounded-full">
+                        <span class="font-bold text-on-surface">Auto Repair Hub</span>
+                    </div>
+                    <button onclick="toggleMobileNav()" class="p-1 text-on-surface-variant">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-medium text-on-surface-variant">Role / Position *</label>
-                    <input type="text" id="emp_role" placeholder="Senior Master Mechanic" required class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+                <nav class="flex flex-col gap-1">
+                    <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
+                    </a>
+                    <a href="analytics.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">analytics</span> Analytics
+                    </a>
+                    <a href="customer.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">group</span> Customers
+                    </a>
+                    <a href="cars.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">directions_car</span> Vehicle Fleet
+                    </a>
+                    <a href="services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">build</span> Service Jobs
+                    </a>
+                    <a href="parts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-[20px]">inventory_2</span> Inventory Parts
+                    </a>
+                    <a href="employee.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary-container text-on-secondary-container">
+                        <span class="material-symbols-outlined text-[20px]">badge</span> Employees
+                    </a>
+                </nav>
+            </div>
+            <div class="pt-space-sm border-t border-outline-variant/30">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-2 text-sm text-error font-medium hover:bg-error-container/30 rounded-lg">
+                    <span class="material-symbols-outlined text-[18px]">logout</span> Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="relative pt-16 bg-surface min-h-screen pb-20 lg:pb-8">
+        <div class="flex flex-col w-full px-space-md py-space-md gap-space-lg text-on-surface">
+
+            <!-- Top Hero Bar & System Context -->
+            <div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md sm:p-space-lg shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md border border-outline-variant/30">
+                <div class="absolute -right-16 -top-24 w-80 h-80 rounded-full bg-secondary-fixed/30 blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col gap-1 z-10">
+                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                        <span>Hub</span>
+                        <span class="text-outline-variant">/</span>
+                        <span class="text-secondary font-bold">Human Resources</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">Personnel &amp; Staff Directory</h1>
+                        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-lowest shadow-sm border border-outline-variant/30">
+                            <span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+                            <span class="text-xs font-medium text-on-surface-variant">Admin Access Only • Role Isolation</span>
+                        </div>
+                    </div>
+                    <p class="text-xs sm:text-sm text-on-surface-variant mt-0.5">Manage technician credentials, service roles, phone registries, and compensation.</p>
+                </div>
+                <div class="flex items-center gap-space-sm z-10 shrink-0">
+                    <button onclick="toggleAddEmployeeDrawer()" class="flex items-center gap-2 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:opacity-95 font-semibold text-xs sm:text-sm rounded-lg shadow-md transition-transform active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px]">person_add</span>
+                        <span>+ Add Employee</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-xs font-medium text-on-surface-variant">Direct Contact Phone</label>
-                    <input type="text" id="emp_phone" placeholder="555-0201" class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+            <!-- Primary Metric KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary rounded-l-xl"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-xl bg-secondary-fixed/40 flex items-center justify-center text-secondary shadow-sm group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-[26px]">groups</span>
+                        </div>
+                        <span class="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-tertiary">
+                            Active
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-baseline gap-2">
+                            <span id="statStaffTotal" class="text-3xl font-extrabold tracking-tight text-on-surface">--</span>
+                            <span class="text-xs text-on-surface-variant font-medium">Team</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-on-surface-variant mt-1 font-medium">
+                            <span>Total Staff Roster</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                        <span>Personnel Active</span>
+                        <span class="text-secondary font-semibold">Managed</span>
+                    </div>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-medium text-on-surface-variant">Annual Salary ($)</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant">$</span>
-                        <input type="number" step="0.01" id="emp_salary" placeholder="65000" class="w-full pl-7 pr-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary font-mono"/>
+
+                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-fixed-dim rounded-l-xl"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface shadow-sm group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-[26px]">handyman</span>
+                        </div>
+                        <span class="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-secondary">
+                            Workshop
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-baseline gap-2">
+                            <span id="statMechanics" class="text-3xl font-extrabold tracking-tight text-on-surface">--</span>
+                            <span class="text-xs text-on-surface-variant font-medium">Techs</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-on-surface-variant mt-1 font-medium">
+                            <span>Certified Mechanics</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                        <span>Shop Bay Assigned</span>
+                        <span class="text-secondary font-semibold">Active</span>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-container rounded-l-xl"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shadow-sm group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-[26px]">payments</span>
+                        </div>
+                        <span class="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-secondary">
+                            Payroll
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-baseline gap-2">
+                            <span id="statPayroll" class="text-3xl font-extrabold tracking-tight text-on-surface">--</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-on-surface-variant mt-1 font-medium">
+                            <span>Annual Commitment</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                        <span>Salary Ledger</span>
+                        <span class="text-secondary font-semibold">Audited</span>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-xl bg-surface-container-lowest p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden border border-outline-variant/30">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary-fixed-dim rounded-l-xl"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-[26px]">security</span>
+                        </div>
+                        <span class="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-tertiary">
+                            Admin
+                        </span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold tracking-tight text-on-surface">RBAC</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-on-surface-variant mt-1 font-medium">
+                            <span>Role-Based Access</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 flex items-center justify-between text-[11px] text-on-surface-variant/80 border-none bg-surface-container-low px-2 py-1.5 rounded-lg">
+                        <span>Token Enforced</span>
+                        <span class="text-secondary font-semibold">Protected</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" onclick="toggleAddEmployeeForm()" class="px-4 py-2 text-xs font-medium text-on-surface-variant hover:bg-surface-container rounded-lg">Cancel</button>
-                <button type="submit" class="px-5 py-2 text-xs font-semibold bg-secondary hover:bg-secondary/90 text-on-secondary rounded-lg shadow-sm">Save Employee</button>
+            <!-- Collapsible Add Employee Card / Drawer -->
+            <div id="addEmployeeCard" class="hidden rounded-xl bg-surface-container-lowest border border-outline-variant/30 p-space-lg shadow-sm transition-all">
+                <div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/20 mb-space-md">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-[20px]">person_add</span>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-semibold text-on-surface">Onboard New Team Member</h2>
+                            <p class="text-xs text-on-surface-variant">Register technician, advisor, or administrator details into the HR registry.</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleAddEmployeeDrawer()" class="text-on-surface-variant hover:text-on-surface p-1">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <form id="addEmployeeForm" onsubmit="handleAddEmployee(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-on-surface-variant">Full Legal Name *</label>
+                            <input type="text" id="emp_name" placeholder="Alex Rivera" required class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-on-surface-variant">Role / Position *</label>
+                            <input type="text" id="emp_role" placeholder="Senior Master Mechanic" required class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-on-surface-variant">Direct Contact Phone</label>
+                            <input type="text" id="emp_phone" placeholder="555-0201" class="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary"/>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-on-surface-variant">Annual Salary ($)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant">$</span>
+                                <input type="number" step="0.01" id="emp_salary" placeholder="65000" class="w-full pl-7 pr-3 py-2 text-sm bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:border-secondary font-mono"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="toggleAddEmployeeDrawer()" class="px-4 py-2 text-xs font-medium text-on-surface-variant hover:bg-surface-container rounded-lg">Cancel</button>
+                        <button type="submit" class="px-5 py-2 text-xs font-semibold bg-secondary hover:bg-secondary/90 text-on-secondary rounded-lg shadow-sm cursor-pointer">Save Employee</button>
+                    </div>
+                </form>
             </div>
-        </form>
-    </div>
 
-    <!-- Search & Table Controls -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-sm">
-        <div class="relative flex-1 max-w-md">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
-            <input type="text" id="searchInput" placeholder="Search by name, role, phone..." class="w-full pl-9 pr-3 py-2 text-xs bg-surface-container-lowest border border-outline-variant/30 rounded-lg focus:outline-none focus:border-secondary"/>
-        </div>
+            <!-- Employees Directory Table Container -->
+            <div class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm overflow-hidden">
+                <div class="p-space-md sm:p-space-lg border-b border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface">Personnel Roster</h2>
+                        <p class="text-xs text-on-surface-variant">Active personnel records, designations, and contact allocations.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadEmployees(currentPage)" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface-container-high rounded-lg hover:bg-surface-container transition-colors text-on-surface cursor-pointer">
+                            <span class="material-symbols-outlined text-[16px]">refresh</span>
+                            <span>Refresh</span>
+                        </button>
+                        <button onclick="toggleAddEmployeeDrawer()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition-colors whitespace-nowrap cursor-pointer">
+                            + Add Employee
+                        </button>
+                    </div>
+                </div>
 
-        <div class="flex items-center gap-2">
-            <button onclick="loadEmployees(currentPage)" class="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-surface-container-lowest border border-outline-variant/30 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant">
-                <span class="material-symbols-outlined text-[16px]">refresh</span>
-                <span>Refresh</span>
-            </button>
-        </div>
-    </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+                        <thead class="bg-surface-container-low text-on-surface-variant font-semibold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="py-3 px-4">Staff ID</th>
+                                <th class="py-3 px-4">Employee Name</th>
+                                <th class="py-3 px-4">Designation / Role</th>
+                                <th class="py-3 px-4">Contact Phone</th>
+                                <th class="py-3 px-4">Salary Allocation</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable" class="divide-y divide-outline-variant/15 text-xs text-on-surface">
+                            <tr><td colspan="6" class="py-8 text-center text-on-surface-variant">Loading employee roster...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
-    <!-- Employees Directory Table -->
-    <div class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-surface-container-low border-b border-outline-variant/20 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
-                        <th class="py-3 px-4">Staff ID</th>
-                        <th class="py-3 px-4">Employee Name</th>
-                        <th class="py-3 px-4">Designation / Role</th>
-                        <th class="py-3 px-4">Contact Phone</th>
-                        <th class="py-3 px-4">Salary Allocation</th>
-                        <th class="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="employeeTable" class="divide-y divide-outline-variant/15 text-xs text-on-surface">
-                    <tr><td colspan="6" class="py-8 text-center text-on-surface-variant">Loading employee roster...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination Bar -->
-        <div class="flex items-center justify-between px-4 py-3 border-t border-outline-variant/20 bg-surface-container-lowest text-xs text-on-surface-variant">
-            <span id="paginationInfo">Showing 0 of 0</span>
-            <div class="flex items-center gap-2">
-                <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1.5 rounded border border-outline-variant/30 hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors">Previous</button>
-                <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1.5 rounded border border-outline-variant/30 hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors">Next</button>
+                <!-- Pagination Bar -->
+                <div class="flex items-center justify-between px-4 py-3 border-t border-outline-variant/20 bg-surface-container-lowest text-xs text-on-surface-variant">
+                    <span id="paginationInfo">Showing 0 of 0 staff members</span>
+                    <div class="flex items-center gap-2">
+                        <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1.5 rounded border border-outline-variant/30 hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors">Previous</button>
+                        <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1.5 rounded border border-outline-variant/30 hover:bg-surface-container disabled:opacity-40 disabled:pointer-events-none transition-colors">Next</button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-</main>
+        </div>
+    </main>
+</div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/80 backdrop-blur-[20px] shadow-[0_-1px_8px_rgba(0,0,0,0.04)] z-50 flex items-center justify-around px-space-xs" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg">
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[11px] hover:text-on-surface" data-path="dashboard" href="index.html">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        <span>Dashboard</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[11px] hover:text-on-surface" data-path="service-jobs" href="services.html">
+        <span class="material-symbols-outlined text-[20px]">build</span>
+        <span>Jobs</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[11px] hover:text-on-surface" data-path="vehicle-fleet" href="cars.html">
+        <span class="material-symbols-outlined text-[20px]">directions_car</span>
+        <span>Fleet</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[11px] hover:text-on-surface" data-path="inventory-parts" href="parts.html">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        <span>Inventory</span>
+    </a>
+    <a class="flex flex-col items-center gap-0.5 text-on-surface-variant text-[11px] hover:text-on-surface" data-path="customers" href="customer.html">
+        <span class="material-symbols-outlined text-[20px]">group</span>
+        <span>Clients</span>
+    </a>
+</nav>
 
 <script src="js/toast.js"></script>
 <script src="js/modal.js"></script>
@@ -430,7 +562,6 @@
 <script>
 API.requireAuth();
 
-// Admin check notification
 const currentUser = API.getUser();
 if (currentUser && currentUser.role !== 'admin') {
     Toast.error('Staff directory is restricted to Administrator access.');
@@ -440,11 +571,12 @@ let currentPage = 1;
 let totalPages = 1;
 let employeeDataMap = {};
 
-function toggleAddEmployeeForm() {
+function toggleAddEmployeeDrawer() {
     const card = document.getElementById('addEmployeeCard');
     card.classList.toggle('hidden');
     if (!card.classList.contains('hidden')) {
         document.getElementById('emp_name').focus();
+        card.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
@@ -459,12 +591,28 @@ async function loadEmployees(page = 1) {
         totalPages = res.pagination.totalPages || 1;
         document.getElementById('paginationInfo').innerText = `Page ${res.pagination.page} of ${totalPages} (${res.pagination.total} staff members)`;
         document.getElementById('statStaffTotal').innerText = res.pagination.total || 0;
+        if (document.getElementById('navEmpCountBadge')) {
+            document.getElementById('navEmpCountBadge').innerText = `${res.pagination.total || 0} Cert`;
+        }
         
         document.getElementById('prevBtn').disabled = currentPage <= 1;
         document.getElementById('nextBtn').disabled = currentPage >= totalPages;
 
         if (!res.data || res.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-on-surface-variant font-medium">No personnel matching query</td></tr>`;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-12 text-center">
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-4xl text-outline">badge</span>
+                            <p class="font-medium text-on-surface">No staff members found</p>
+                            <p class="text-xs text-on-surface-variant max-w-sm">No employees match your search query or none have been enrolled.</p>
+                            <button onclick="toggleAddEmployeeDrawer()" type="button" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-on-secondary text-xs font-semibold rounded-lg hover:bg-secondary-container transition-colors shadow-sm">
+                                <span class="material-symbols-outlined text-[16px]">person_add</span> Add First Employee
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
@@ -482,13 +630,16 @@ async function loadEmployees(page = 1) {
         document.getElementById('statMechanics').innerText = mechCount;
         document.getElementById('statPayroll').innerText = `$${(totalPayroll).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
 
-        tbody.innerHTML = res.data.map(e => `
-            <tr class="hover:bg-surface-container-high/40 transition-colors">
-                <td class="py-3 px-4 font-mono text-[11px] text-on-surface-variant">#${e.employee_id}</td>
+        tbody.innerHTML = res.data.map(e => {
+            const initials = (e.name || 'EM').split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase();
+
+            return `
+            <tr class="hover:bg-surface-container-low transition-colors group">
+                <td class="py-3 px-4 font-mono text-[11px] text-secondary font-bold">#${String(e.employee_id).padStart(2, '0')}</td>
                 <td class="py-3 px-4 font-semibold text-on-surface">
                     <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-bold text-secondary">
-                            ${escapeHTML((e.name || 'E').charAt(0).toUpperCase())}
+                        <div class="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-[10px] font-bold text-on-secondary-fixed">
+                            ${initials}
                         </div>
                         <span>${escapeHTML(e.name)}</span>
                     </div>
@@ -501,7 +652,7 @@ async function loadEmployees(page = 1) {
                 <td class="py-3 px-4 text-on-surface-variant font-mono text-[11px]">
                     <div class="flex items-center gap-1">
                         <span class="material-symbols-outlined text-[14px]">call</span>
-                        <span>${escapeHTML(e.phone || 'N/A')}</span>
+                        ${e.phone ? `<a href="tel:${encodeURIComponent(e.phone)}" class="text-secondary hover:underline">${escapeHTML(e.phone)}</a>` : '<span class="text-outline">N/A</span>'}
                     </div>
                 </td>
                 <td class="py-3 px-4 font-mono font-medium text-on-surface">
@@ -509,16 +660,17 @@ async function loadEmployees(page = 1) {
                 </td>
                 <td class="py-3 px-4 text-right">
                     <div class="inline-flex items-center gap-1.5">
-                        <button onclick="openEditModal(${e.employee_id})" class="btn-sm px-2.5 py-1 text-[11px] font-medium text-secondary hover:bg-secondary/10 rounded border border-secondary/20 transition-colors">
+                        <button onclick="openEditModal(${e.employee_id})" class="btn-sm px-2.5 py-1 text-[11px] font-medium text-secondary hover:bg-secondary/10 rounded border border-secondary/20 transition-colors cursor-pointer">
                             ✏️ Edit
                         </button>
-                        <button onclick="confirmDelete(${e.employee_id})" class="btn-sm px-2.5 py-1 text-[11px] font-medium text-error hover:bg-error-container/40 rounded border border-error/20 transition-colors">
+                        <button onclick="confirmDelete(${e.employee_id})" class="btn-sm px-2.5 py-1 text-[11px] font-medium text-error hover:bg-error-container/40 rounded border border-error/20 transition-colors cursor-pointer">
                             🗑 Delete
                         </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
     } catch (err) {
         Toast.error(err.message || 'Failed to load employees');
@@ -541,7 +693,7 @@ async function handleAddEmployee(e) {
         document.getElementById('emp_phone').value = '';
         document.getElementById('emp_salary').value = '';
 
-        toggleAddEmployeeForm();
+        toggleAddEmployeeDrawer();
         loadEmployees(1);
     } catch (err) {
         Toast.error(err.message || 'Failed to add employee');
@@ -615,6 +767,11 @@ function changePage(delta) {
     }
 }
 
+function debounceSearch() {
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => loadEmployees(1), 300);
+}
+
 function logout() {
     API.logout();
 }
@@ -623,21 +780,8 @@ function escapeHTML(str) {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function debounce(func, timeout = 300){
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { func.apply(this, args); }, timeout);
-    };
-}
-
 window.onload = () => {
     loadEmployees(1);
-
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.oninput = debounce(() => loadEmployees(1), 300);
-    }
 };
 </script>
 

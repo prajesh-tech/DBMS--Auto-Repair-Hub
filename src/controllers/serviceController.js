@@ -1,12 +1,17 @@
 const db = require('../config/database');
 const PDFDocument = require('pdfkit');
 
+const parseId = (id) => {
+    const parsed = parseInt(id, 10);
+    return isNaN(parsed) || parsed <= 0 ? null : parsed;
+};
+
 const getServices = async (req, res, next) => {
     try {
         const search = req.query.search || '';
         const statusFilter = req.query.status || '';
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
         const offset = (page - 1) * limit;
 
         let query = `
@@ -29,9 +34,9 @@ const getServices = async (req, res, next) => {
         let queryParams = [];
 
         if (search) {
-            conditions.push('(Customer.name LIKE ? OR Car.model LIKE ? OR ServiceJob.description LIKE ?)');
+            conditions.push('(Customer.name LIKE ? OR Car.model LIKE ? OR Car.manufacturer LIKE ? OR ServiceJob.description LIKE ?)');
             const term = `%${search}%`;
-            queryParams.push(term, term, term);
+            queryParams.push(term, term, term, term);
         }
 
         if (statusFilter) {
@@ -49,12 +54,12 @@ const getServices = async (req, res, next) => {
 
         const [rows] = await db.query(query, [...queryParams, limit, offset]);
         const [countResult] = await db.query(countQuery, queryParams);
-        const total = countResult[0].total;
+        const total = countResult && countResult[0] ? countResult[0].total : 0;
 
         res.json({
             success: true,
             data: rows,
-            pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+            pagination: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 }
         });
     } catch (err) {
         next(err);
@@ -63,7 +68,11 @@ const getServices = async (req, res, next) => {
 
 const getServiceById = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const jobId = parseId(req.params.id);
+        if (!jobId) {
+            return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
+        }
+
         const [rows] = await db.query(`
             SELECT ServiceJob.*, 
                    Car.vin, Car.manufacturer, Car.model, Car.year, Car.color,
@@ -74,9 +83,9 @@ const getServiceById = async (req, res, next) => {
             LEFT JOIN Customer ON Car.customer_id = Customer.customer_id
             LEFT JOIN Employee ON ServiceJob.employee_id = Employee.employee_id
             WHERE ServiceJob.job_id = ?
-        `, [id]);
+        `, [jobId]);
 
-        if (rows.length === 0) {
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Service job not found' });
         }
 
@@ -86,7 +95,7 @@ const getServiceById = async (req, res, next) => {
             FROM ServiceJobPart
             JOIN Part ON ServiceJobPart.part_id = Part.part_id
             WHERE ServiceJobPart.job_id = ?
-        `, [id]);
+        `, [jobId]);
 
         res.json({ success: true, data: { ...rows[0], parts } });
     } catch (err) {
@@ -99,13 +108,56 @@ const createService = async (req, res, next) => {
         const { car_id, employee_id, job_date, description, total_cost, status } = req.body;
 
         if (!car_id || !job_date || !description) {
-            return res.status(400).json({ success: false, message: 'Car ID, Job Date, and Description are required' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Car ID, Job Date, and Description are required' 
+            });
         }
+
+        const cleanCarId = parseInt(car_id, 10);
+        const cleanEmpId = employee_id ? parseInt(employee_id, 10) : null;
+        const cleanDate = new Date(job_date);
+        const cleanDesc = String(description).trim();
+        const cleanCost = total_cost !== undefined ? parseFloat(total_cost) : 0.00;
+        const cleanStatus = status && ['Pending', 'In Progress', 'Completed', 'Cancelled'].includes(status) 
+            ? status 
+            : 'Pending';
+
+        if (isNaN(cleanCarId) || cleanCarId <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid Car ID' });
+        }
+
+        if (cleanEmpId !== null && (isNaN(cleanEmpId) || cleanEmpId <= 0)) {
+            return res.status(400).json({ success: false, message: 'Invalid Employee ID' });
+        }
+
+        if (isNaN(cleanDate.getTime())) {
+            return res.status(400).json({ success: false, message: 'Invalid job date format' });
+        }
+
+        if (isNaN(cleanCost) || cleanCost < 0) {
+            return res.status(400).json({ success: false, message: 'Total cost cannot be negative' });
+        }
+
+        // Verify car exists
+        const [carCheck] = await db.query('SELECT car_id FROM Car WHERE car_id = ? AND is_deleted = FALSE', [cleanCarId]);
+        if (!carCheck || carCheck.length === 0) {
+            return res.status(400).json({ success: false, message: 'Target vehicle does not exist' });
+        }
+
+        if (cleanEmpId) {
+            const [empCheck] = await db.query('SELECT employee_id FROM Employee WHERE employee_id = ? AND is_deleted = FALSE', [cleanEmpId]);
+            if (!empCheck || empCheck.length === 0) {
+                return res.status(400).json({ success: false, message: 'Assigned employee does not exist' });
+            }
+        }
+
+        const formattedDate = cleanDate.toISOString().split('T')[0];
 
         const [result] = await db.query(
             `INSERT INTO ServiceJob (car_id, employee_id, job_date, description, total_cost, status)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [car_id, employee_id || null, job_date, description, total_cost || 0.00, status || 'Pending']
+            [cleanCarId, cleanEmpId, formattedDate, cleanDesc, cleanCost, cleanStatus]
         );
 
         res.status(201).json({
@@ -121,29 +173,33 @@ const createService = async (req, res, next) => {
 const addPartToServiceJob = async (req, res, next) => {
     const conn = await db.getConnection();
     try {
-        const { id } = req.params; // job_id
-        const { part_id, quantity } = req.body;
+        const jobId = parseId(req.params.id);
+        const partId = parseId(req.body.part_id);
+        const qty = parseInt(req.body.quantity, 10) || 1;
 
-        const qty = parseInt(quantity) || 1;
-
-        if (!part_id || qty <= 0) {
+        if (!jobId) {
             conn.release();
-            return res.status(400).json({ success: false, message: 'Valid Part ID and Quantity required' });
+            return res.status(400).json({ success: false, message: 'Invalid service job ID' });
+        }
+
+        if (!partId || qty <= 0) {
+            conn.release();
+            return res.status(400).json({ success: false, message: 'Valid Part ID and Quantity (>= 1) are required' });
         }
 
         await conn.beginTransaction();
 
         // Check if service job exists
-        const [jobs] = await conn.query('SELECT job_id FROM ServiceJob WHERE job_id = ? FOR UPDATE', [id]);
-        if (jobs.length === 0) {
+        const [jobs] = await conn.query('SELECT job_id FROM ServiceJob WHERE job_id = ? FOR UPDATE', [jobId]);
+        if (!jobs || jobs.length === 0) {
             await conn.rollback();
             conn.release();
             return res.status(404).json({ success: false, message: 'Service job not found' });
         }
 
         // Check if part exists & lock row FOR UPDATE
-        const [parts] = await conn.query('SELECT * FROM Part WHERE part_id = ? AND is_deleted = FALSE FOR UPDATE', [part_id]);
-        if (parts.length === 0) {
+        const [parts] = await conn.query('SELECT * FROM Part WHERE part_id = ? AND is_deleted = FALSE FOR UPDATE', [partId]);
+        if (!parts || parts.length === 0) {
             await conn.rollback();
             conn.release();
             return res.status(404).json({ success: false, message: 'Part not found' });
@@ -165,7 +221,7 @@ const addPartToServiceJob = async (req, res, next) => {
         // Deduct stock safely ensuring stock_quantity doesn't drop below 0
         const [updateStockResult] = await conn.query(
             'UPDATE Part SET stock_quantity = stock_quantity - ? WHERE part_id = ? AND stock_quantity >= ?',
-            [qty, part_id, qty]
+            [qty, partId, qty]
         );
 
         if (updateStockResult.affectedRows === 0) {
@@ -177,23 +233,21 @@ const addPartToServiceJob = async (req, res, next) => {
         // Insert into ServiceJobPart
         await conn.query(
             'INSERT INTO ServiceJobPart (job_id, part_id, quantity_used, unit_price) VALUES (?, ?, ?, ?)',
-            [id, part_id, qty, part.unit_price]
+            [jobId, partId, qty, part.unit_price]
         );
 
         // Recalculate ServiceJob total cost
         await conn.query(
             'UPDATE ServiceJob SET total_cost = total_cost + ? WHERE job_id = ?',
-            [itemTotalCost, id]
+            [itemTotalCost, jobId]
         );
 
         await conn.commit();
         conn.release();
 
-        console.log(`[AUDIT INVENTORY]: Job #${id} assigned ${qty}x Part #${part_id} (${part.part_name}). New stock: ${part.stock_quantity - qty}`);
-
         res.json({
             success: true,
-            message: `Added ${qty}x ${part.part_name} to Service Job #${id}`,
+            message: `Added ${qty}x ${part.part_name} to Service Job #${jobId}`,
             addedCost: itemTotalCost
         });
     } catch (err) {
@@ -206,16 +260,22 @@ const addPartToServiceJob = async (req, res, next) => {
 const removePartFromServiceJob = async (req, res, next) => {
     const conn = await db.getConnection();
     try {
-        const { id, jobPartId } = req.params; // job_id and job_part_id
+        const jobId = parseId(req.params.id);
+        const jobPartId = parseId(req.params.jobPartId);
+
+        if (!jobId || !jobPartId) {
+            conn.release();
+            return res.status(400).json({ success: false, message: 'Invalid service job ID or part reference ID' });
+        }
 
         await conn.beginTransaction();
 
         const [jobParts] = await conn.query(
             'SELECT * FROM ServiceJobPart WHERE job_part_id = ? AND job_id = ? FOR UPDATE',
-            [jobPartId, id]
+            [jobPartId, jobId]
         );
 
-        if (jobParts.length === 0) {
+        if (!jobParts || jobParts.length === 0) {
             await conn.rollback();
             conn.release();
             return res.status(404).json({ success: false, message: 'Assigned part entry not found for this service job' });
@@ -233,7 +293,7 @@ const removePartFromServiceJob = async (req, res, next) => {
         // Deduct cost from ServiceJob
         await conn.query(
             'UPDATE ServiceJob SET total_cost = GREATEST(0, total_cost - ?) WHERE job_id = ?',
-            [restoredCost, id]
+            [restoredCost, jobId]
         );
 
         // Remove ServiceJobPart entry
@@ -241,8 +301,6 @@ const removePartFromServiceJob = async (req, res, next) => {
 
         await conn.commit();
         conn.release();
-
-        console.log(`[AUDIT INVENTORY RESTORE]: Job #${id} removed JobPart #${jobPartId}. Restored ${jp.quantity_used}x to Part #${jp.part_id}`);
 
         res.json({ success: true, message: 'Assigned part removed and inventory restored successfully' });
     } catch (err) {
@@ -254,8 +312,46 @@ const removePartFromServiceJob = async (req, res, next) => {
 
 const updateService = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const jobId = parseId(req.params.id);
+        if (!jobId) {
+            return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
+        }
+
         const { car_id, employee_id, job_date, description, total_cost, status } = req.body;
+
+        if (car_id === undefined && employee_id === undefined && job_date === undefined && 
+            description === undefined && total_cost === undefined && status === undefined) {
+            return res.status(400).json({ success: false, message: 'No valid update fields provided' });
+        }
+
+        // Mechanic role guardrail: mechanics can only update status and description
+        if (req.user && req.user.role === 'mechanic') {
+            if (car_id !== undefined || employee_id !== undefined || total_cost !== undefined) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Forbidden: Mechanics are only permitted to update job status and progress notes'
+                });
+            }
+        }
+
+        const cleanCarId = car_id !== undefined ? parseId(car_id) : null;
+        const cleanEmpId = employee_id !== undefined ? (employee_id ? parseId(employee_id) : null) : null;
+        const cleanDesc = description !== undefined && typeof description === 'string' ? description.trim() : null;
+        const cleanCost = total_cost !== undefined ? parseFloat(total_cost) : null;
+        const cleanStatus = status !== undefined && ['Pending', 'In Progress', 'Completed', 'Cancelled'].includes(status) ? status : null;
+        let cleanDate = null;
+
+        if (job_date !== undefined) {
+            const d = new Date(job_date);
+            if (isNaN(d.getTime())) {
+                return res.status(400).json({ success: false, message: 'Invalid job date provided' });
+            }
+            cleanDate = d.toISOString().split('T')[0];
+        }
+
+        if (cleanCost !== null && (isNaN(cleanCost) || cleanCost < 0)) {
+            return res.status(400).json({ success: false, message: 'Total cost cannot be negative' });
+        }
 
         const [result] = await db.query(
             `UPDATE ServiceJob 
@@ -266,7 +362,7 @@ const updateService = async (req, res, next) => {
                  total_cost = COALESCE(?, total_cost), 
                  status = COALESCE(?, status) 
              WHERE job_id = ?`,
-            [car_id || null, employee_id || null, job_date || null, description || null, total_cost || null, status || null, id]
+            [cleanCarId, cleanEmpId, cleanDate, cleanDesc, cleanCost, cleanStatus, jobId]
         );
 
         if (result.affectedRows === 0) {
@@ -282,13 +378,18 @@ const updateService = async (req, res, next) => {
 const deleteService = async (req, res, next) => {
     const conn = await db.getConnection();
     try {
-        const { id } = req.params;
+        const jobId = parseId(req.params.id);
+        if (!jobId) {
+            conn.release();
+            return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
+        }
+
         await conn.beginTransaction();
 
         // Find all assigned parts for this job to restore inventory
         const [assignedParts] = await conn.query(
             'SELECT part_id, quantity_used FROM ServiceJobPart WHERE job_id = ? FOR UPDATE',
-            [id]
+            [jobId]
         );
 
         for (const item of assignedParts) {
@@ -296,10 +397,9 @@ const deleteService = async (req, res, next) => {
                 'UPDATE Part SET stock_quantity = stock_quantity + ? WHERE part_id = ?',
                 [item.quantity_used, item.part_id]
             );
-            console.log(`[AUDIT INVENTORY RESTORE ON JOB DELETE]: Job #${id} deleted. Restored ${item.quantity_used}x to Part #${item.part_id}`);
         }
 
-        const [result] = await conn.query('DELETE FROM ServiceJob WHERE job_id = ?', [id]);
+        const [result] = await conn.query('DELETE FROM ServiceJob WHERE job_id = ?', [jobId]);
 
         if (result.affectedRows === 0) {
             await conn.rollback();
@@ -320,7 +420,11 @@ const deleteService = async (req, res, next) => {
 
 const downloadInvoicePDF = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const jobId = parseId(req.params.id);
+        if (!jobId) {
+            return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
+        }
+
         const [rows] = await db.query(`
             SELECT ServiceJob.*, 
                    Car.vin, Car.manufacturer, Car.model, Car.year, Car.color,
@@ -331,9 +435,9 @@ const downloadInvoicePDF = async (req, res, next) => {
             LEFT JOIN Customer ON Car.customer_id = Customer.customer_id
             LEFT JOIN Employee ON ServiceJob.employee_id = Employee.employee_id
             WHERE ServiceJob.job_id = ?
-        `, [id]);
+        `, [jobId]);
 
-        if (rows.length === 0) {
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Service job not found' });
         }
 
@@ -342,7 +446,7 @@ const downloadInvoicePDF = async (req, res, next) => {
             FROM ServiceJobPart
             JOIN Part ON ServiceJobPart.part_id = Part.part_id
             WHERE ServiceJobPart.job_id = ?
-        `, [id]);
+        `, [jobId]);
 
         const job = rows[0];
         const doc = new PDFDocument({ margin: 50 });
@@ -352,41 +456,41 @@ const downloadInvoicePDF = async (req, res, next) => {
 
         doc.pipe(res);
 
-        // Header
-        doc.fillColor('#c9a227').fontSize(24).text('Auto Repair Hub', { align: 'left' });
-        doc.fillColor('#555555').fontSize(10).text('123 Repair Street, Auto City', { align: 'left' });
-        doc.text('Phone: (555) 019-2831 | Email: support@autorepairhub.com');
+        // Header - Fidelity Modern Corporate Blue & Slate
+        doc.fillColor('#0050d7').fontSize(24).font('Helvetica-Bold').text('Auto Repair Hub', { align: 'left' });
+        doc.fillColor('#444748').fontSize(10).font('Helvetica').text('123 Pro Fleet Workshop Way, Suite 100', { align: 'left' });
+        doc.text('Phone: (555) 019-2831 | Email: billing@autorepairhub.com');
         doc.moveDown();
 
-        doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.strokeColor('#c4c7c8').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
 
         // Invoice Meta
-        doc.fillColor('#333333').fontSize(16).text(`SERVICE INVOICE #${job.job_id}`, { underline: true });
-        doc.fontSize(10).text(`Date: ${new Date(job.job_date).toLocaleDateString()}`);
+        doc.fillColor('#1c1b1b').fontSize(16).font('Helvetica-Bold').text(`SERVICE INVOICE #${job.job_id}`);
+        doc.fontSize(10).font('Helvetica').text(`Date: ${new Date(job.job_date).toLocaleDateString()}`);
         doc.text(`Status: ${job.status}`);
         doc.moveDown();
 
         // Customer & Vehicle Details
-        doc.fillColor('#222222').fontSize(12).text('Customer & Vehicle Details:');
-        doc.fontSize(10).fillColor('#444444');
+        doc.fillColor('#1c1b1b').fontSize(12).font('Helvetica-Bold').text('Customer & Vehicle Details:');
+        doc.fontSize(10).font('Helvetica').fillColor('#444748');
         doc.text(`Customer Name: ${job.customer_name || 'N/A'}`);
         doc.text(`Phone: ${job.customer_phone || 'N/A'}`);
-        doc.text(`Vehicle: ${job.year || ''} ${job.manufacturer || ''} ${job.model || ''} (${job.color || ''})`);
+        doc.text(`Vehicle: ${job.year || ''} ${job.manufacturer || ''} ${job.model || ''} (${job.color || 'Standard'})`);
         doc.text(`VIN: ${job.vin || 'N/A'}`);
-        doc.text(`Assigned Employee: ${job.employee_name || 'Unassigned'}`);
+        doc.text(`Assigned Technician: ${job.employee_name || 'Unassigned'}`);
         doc.moveDown();
 
         // Description
-        doc.fillColor('#222222').fontSize(12).text('Service Performed:');
-        doc.fontSize(10).fillColor('#444444');
+        doc.fillColor('#1c1b1b').fontSize(12).font('Helvetica-Bold').text('Service Performed:');
+        doc.fontSize(10).font('Helvetica').fillColor('#444748');
         doc.text(`Description: ${job.description}`);
         doc.moveDown();
 
         // Parts Used Section
-        if (parts.length > 0) {
-            doc.fillColor('#222222').fontSize(12).text('Spare Parts & Materials Used:');
-            doc.fontSize(10).fillColor('#444444');
+        if (parts && parts.length > 0) {
+            doc.fillColor('#1c1b1b').fontSize(12).font('Helvetica-Bold').text('Spare Parts & Materials Used:');
+            doc.fontSize(10).font('Helvetica').fillColor('#444748');
             parts.forEach(p => {
                 const subtotal = (p.quantity_used * parseFloat(p.unit_price)).toFixed(2);
                 doc.text(`- ${p.part_name} (${p.part_number}) x${p.quantity_used} @ $${parseFloat(p.unit_price).toFixed(2)} = $${subtotal}`);
@@ -395,13 +499,13 @@ const downloadInvoicePDF = async (req, res, next) => {
         }
 
         // Total
-        doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.strokeColor('#c4c7c8').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
 
-        doc.fillColor('#c9a227').fontSize(14).text(`Total Cost: $${parseFloat(job.total_cost).toFixed(2)}`, { align: 'right' });
+        doc.fillColor('#0050d7').fontSize(14).font('Helvetica-Bold').text(`Total Amount Due: $${parseFloat(job.total_cost).toFixed(2)}`, { align: 'right' });
         doc.moveDown(2);
 
-        doc.fillColor('#777777').fontSize(9).text('Thank you for choosing Auto Repair Hub for your automotive service needs!', { align: 'center' });
+        doc.fillColor('#747878').fontSize(9).font('Helvetica').text('Thank you for choosing Auto Repair Hub. All services are backed by our Pro Fleet 12-month warranty.', { align: 'center' });
 
         doc.end();
     } catch (err) {

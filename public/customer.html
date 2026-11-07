@@ -3,9 +3,21 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="description" content="Manage client records, vehicle ownership histories, contact directories, and billing accounts in Auto Repair Hub."/>
     <meta content="web_dashboard" name="shell-type"/>
     <title>Auto Repair Hub - Customer Management &amp; Accounts</title>
-    <link rel="icon" type="image/png" href="images/logo.png"/>
+    <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -631,7 +643,20 @@ async function loadCustomers(page = 1) {
         document.getElementById('nextBtn').disabled = currentPage >= totalPages;
 
         if (!res.data || res.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-on-surface-variant italic">No customers found matching search.</td></tr>`;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-12 text-center">
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-4xl text-outline">group_off</span>
+                            <p class="font-medium text-on-surface">No client accounts found</p>
+                            <p class="text-xs text-on-surface-variant max-w-sm">No customers matched your filter query or the registry is empty.</p>
+                            <button onclick="openAddModal()" type="button" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-on-secondary text-xs font-semibold rounded-lg hover:bg-secondary-container transition-colors shadow-sm">
+                                <span class="material-symbols-outlined text-[16px]">person_add</span> Register New Customer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
@@ -656,8 +681,12 @@ async function loadCustomers(page = 1) {
                             </div>
                         </div>
                     </td>
-                    <td class="py-3.5 px-space-md font-mono text-on-surface-variant">${escapeHTML(c.phone || 'N/A')}</td>
-                    <td class="py-3.5 px-space-md text-on-surface-variant truncate max-w-[180px]">${escapeHTML(c.email || 'N/A')}</td>
+                    <td class="py-3.5 px-space-md font-mono text-on-surface-variant">
+                        ${c.phone ? `<a href="tel:${encodeURIComponent(c.phone)}" class="text-secondary hover:underline">${escapeHTML(c.phone)}</a>` : '<span class="text-outline">N/A</span>'}
+                    </td>
+                    <td class="py-3.5 px-space-md text-on-surface-variant truncate max-w-[180px]">
+                        ${c.email ? `<a href="mailto:${encodeURIComponent(c.email)}" class="text-secondary hover:underline">${escapeHTML(c.email)}</a>` : '<span class="text-outline">N/A</span>'}
+                    </td>
                     <td class="py-3.5 px-space-md text-center">
                         <div class="flex items-center justify-center gap-1">
                             <button onclick="openEditModal(${c.customer_id})" class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-secondary-fixed rounded-lg transition-colors cursor-pointer" title="Edit Profile" type="button">

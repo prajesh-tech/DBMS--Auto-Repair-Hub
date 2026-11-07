@@ -167,29 +167,63 @@ const API = {
     },
 
     // Theme Management
+    updateThemeToggleUI(theme) {
+        document.querySelectorAll('#themeToggleBtn, .theme-toggle-btn').forEach(btn => {
+            const iconSpan = btn.querySelector('.material-symbols-outlined');
+            if (iconSpan) {
+                iconSpan.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+            } else {
+                btn.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            }
+            btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+        });
+    },
+
     initTheme() {
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
         document.documentElement.classList.toggle('dark', currentTheme === 'dark');
-        const btn = document.getElementById('themeToggleBtn');
-        if (btn) {
-            btn.innerHTML = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
-        }
+        this.updateThemeToggleUI(currentTheme);
         this.initNav();
         const user = this.getUser();
         if (user) this.applyRoleRestrictions(user);
     },
 
     toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const current = localStorage.getItem('theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         document.documentElement.classList.toggle('dark', next === 'dark');
         localStorage.setItem('theme', next);
-        const btn = document.getElementById('themeToggleBtn');
-        if (btn) {
-            btn.innerHTML = next === 'dark' ? '☀️ Light' : '🌙 Dark';
+        this.updateThemeToggleUI(next);
+    },
+
+    // Toast Notification Utility
+    showToast(message, type = 'info') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none';
+            document.body.appendChild(container);
         }
+        const toast = document.createElement('div');
+        const colors = {
+            success: 'bg-emerald-600 text-white',
+            error: 'bg-red-600 text-white',
+            info: 'bg-blue-600 text-white',
+            warning: 'bg-amber-600 text-white'
+        };
+        toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2`;
+        toast.innerHTML = `<span>${message}</span>`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
     }
 };
 

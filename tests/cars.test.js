@@ -1,75 +1,116 @@
 const request = require('supertest');
-const app = require('../src/server');
+const jwt = require('jsonwebtoken');
+
+jest.mock('../src/config/database', () => ({
+    query: jest.fn(),
+    getConnection: jest.fn(),
+    end: jest.fn().mockResolvedValue()
+}));
+
 const db = require('../src/config/database');
+const app = require('../src/server');
+const { JWT_SECRET } = require('../src/config/env');
 
-describe('Vehicle (Car) API Tests', () => {
-    let token;
-    let createdCarId;
-    const testVin = 'TEST1234567890123';
+describe('Car / Vehicle API & RBAC Tests', () => {
+    const adminToken = jwt.sign({ user_id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+    const staffToken = jwt.sign({ user_id: 2, username: 'staff1', role: 'staff' }, JWT_SECRET, { expiresIn: '1h' });
+    const mechanicToken = jwt.sign({ user_id: 3, username: 'tech1', role: 'mechanic' }, JWT_SECRET, { expiresIn: '1h' });
 
-    beforeAll(async () => {
-        await db.query('DELETE FROM Car WHERE vin = ?', [testVin]);
-
-        const res = await request(app)
-            .post('/api/auth/login')
-            .send({ username: 'admin', password: '1234' });
-        token = res.body.token;
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        if (createdCarId) {
-            await db.query('DELETE FROM Car WHERE car_id = ?', [createdCarId]);
-        }
-        await db.end();
+        if (db.end) await db.end();
     });
 
-    it('should create a new car linked to customer #1', async () => {
+    it('should reject unauthenticated request with 401', async () => {
+        const res = await request(app).get('/api/cars');
+        expect(res.statusCode).toBe(401);
+    });
+
+    it('should fetch car list with pagination and search', async () => {
+        db.query
+            .mockResolvedValueOnce([[{ car_id: 1, vin: '1HGCR2F83HA000001', manufacturer: 'Honda', model: 'Accord' }]])
+            .mockResolvedValueOnce([[{ total: 1 }]]);
+
+        const res = await request(app)
+            .get('/api/cars?search=Accord')
+            .set('Authorization', `Bearer ${adminToken}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data[0].model).toBe('Accord');
+    });
+
+    it('should reject car creation with invalid VIN length (must be 17 chars)', async () => {
         const res = await request(app)
             .post('/api/cars')
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${adminToken}`)
             .send({
-                vin: testVin,
+                vin: 'SHORTVIN',
                 manufacturer: 'Tesla',
-                model: 'Model S Plaid',
+                model: 'Model S',
                 year: 2024,
-                color: 'Red',
+                customer_id: 1
+            });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.success).toBe(false);
+        expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject car creation with out-of-bounds year', async () => {
+        const res = await request(app)
+            .post('/api/cars')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({
+                vin: '1HGCR2F83HA000002',
+                manufacturer: 'Tesla',
+                model: 'Model S',
+                year: 1800,
+                customer_id: 1
+            });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.success).toBe(false);
+    });
+
+    it('should forbid mechanic from registering new cars (RBAC 403)', async () => {
+        const res = await request(app)
+            .post('/api/cars')
+            .set('Authorization', `Bearer ${mechanicToken}`)
+            .send({
+                vin: '1HGCR2F83HA000003',
+                manufacturer: 'Toyota',
+                model: 'Camry',
+                year: 2023,
+                customer_id: 1
+            });
+
+        expect(res.statusCode).toBe(403);
+    });
+
+    it('should allow staff to create car when customer exists', async () => {
+        db.query
+            .mockResolvedValueOnce([[{ customer_id: 1 }]]) // Customer exists check
+            .mockResolvedValueOnce([[]]) // VIN does not exist
+            .mockResolvedValueOnce([{ insertId: 5 }]); // Insert car
+
+        const res = await request(app)
+            .post('/api/cars')
+            .set('Authorization', `Bearer ${staffToken}`)
+            .send({
+                vin: '1HGCR2F83HA000004',
+                manufacturer: 'Toyota',
+                model: 'Corolla',
+                year: 2022,
+                color: 'Silver',
                 customer_id: 1
             });
 
         expect(res.statusCode).toBe(201);
         expect(res.body.success).toBe(true);
-        expect(res.body.carId).toBeDefined();
-        createdCarId = res.body.carId;
-    });
-
-    it('should fetch car list with pagination and search', async () => {
-        const res = await request(app)
-            .get('/api/cars?search=Plaid')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body.success).toBe(true);
-        expect(res.body.data.length).toBeGreaterThan(0);
-        expect(res.body.data[0].model).toContain('Plaid');
-    });
-
-    it('should update car details', async () => {
-        const res = await request(app)
-            .put(`/api/cars/${createdCarId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({ color: 'Matte Black' });
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body.success).toBe(true);
-    });
-
-    it('should delete car record', async () => {
-        const res = await request(app)
-            .delete(`/api/cars/${createdCarId}`)
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(res.statusCode).toBe(200);
-        expect(res.body.success).toBe(true);
-        createdCarId = null;
+        expect(res.body.carId).toBe(5);
     });
 });

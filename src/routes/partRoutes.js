@@ -1,12 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const partController = require('../controllers/partController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, requireRole } = require('../middleware/authMiddleware');
+const { 
+    validateIdParam, 
+    validateCreatePart, 
+    validateUpdatePart 
+} = require('../middleware/validationMiddleware');
 
-router.get('/', verifyToken, partController.getParts);
-router.get('/:id', verifyToken, partController.getPartById);
-router.post('/', verifyToken, partController.createPart);
-router.put('/:id', verifyToken, partController.updatePart);
-router.delete('/:id', verifyToken, partController.deletePart);
+// View access for admin, staff, and mechanic
+router.get('/', verifyToken, requireRole(['admin', 'staff', 'mechanic']), partController.getParts);
+router.get('/:id', verifyToken, requireRole(['admin', 'staff', 'mechanic']), validateIdParam('id'), partController.getPartById);
+
+// Inventory mutations restricted to admin and staff
+router.post('/', verifyToken, requireRole(['admin', 'staff']), validateCreatePart, partController.createPart);
+router.put('/:id', verifyToken, requireRole(['admin', 'staff']), validateIdParam('id'), validateUpdatePart, partController.updatePart);
+router.delete('/:id', verifyToken, requireRole(['admin', 'staff']), validateIdParam('id'), partController.deletePart);
 
 module.exports = router;

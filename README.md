@@ -26,7 +26,7 @@ The application features a complete redesign aligning with the **Fidelity Modern
 - **Frontend**: Modern Vanilla HTML5, Fidelity Modern Glassmorphism CSS (Google Inter font), JavaScript (Async/Fetch)
 - **Analytics**: Chart.js Interactive Timeframe Visualizations matching the Fidelity Modern palette
 - **PDF Generation**: PDFKit
-- **Testing**: Jest, Supertest (20/20 tests passing across 6 test suites)
+- **Testing**: Jest, Supertest (39/39 tests passing across 7 test suites covering auth, RBAC, input validation, and business logic)
 
 ---
 
@@ -67,12 +67,14 @@ Auto_Repair_Hub/
 │   ├── employee.html           # Employee Directory UI (Admin only)
 │   ├── cars.html               # Vehicle Fleet Management UI
 │   ├── services.html           # Service Jobs & PDF Invoice Management UI
-│   └── parts.html              # Inventory Parts Management UI
+│   ├── parts.html              # Inventory Parts Management UI
+│   └── 404.html                # Custom Fidelity Modern 404 error page
 ├── src/                        # Modular backend code (MVC)
 │   ├── config/
-│   │   └── database.js         # mysql2/promise pool connection
+│   │   ├── database.js         # mysql2/promise pool connection
+│   │   └── env.js              # Production fail-fast environment validator
 │   ├── controllers/            # Business logic & SQL query handlers
-│   │   ├── authController.js   # Dual-token cookie auth, refresh, & logout
+│   │   ├── authController.js   # Dual-token cookie auth, bcrypt verification, refresh, & logout
 │   │   ├── customerController.js
 │   │   ├── employeeController.js
 │   │   ├── carController.js
@@ -81,8 +83,8 @@ Auto_Repair_Hub/
 │   │   └── dashboardController.js # Analytics & timeframe financial statistics
 │   ├── middleware/             # Express middlewares
 │   │   ├── authMiddleware.js   # Cookie token verification & requireRole RBAC
-│   │   ├── errorMiddleware.js  # Centralized error handler & SQL leakage protection
-│   │   └── validationMiddleware.js
+│   │   ├── errorMiddleware.js  # Centralized error handler, HTML 404, & SQL leakage protection
+│   │   └── validationMiddleware.js # express-validator input sanitization & rules
 │   ├── routes/                 # REST API endpoints
 │   │   ├── authRoutes.js
 │   │   ├── customerRoutes.js
@@ -92,13 +94,14 @@ Auto_Repair_Hub/
 │   │   ├── partRoutes.js
 │   │   └── dashboardRoutes.js
 │   └── server.js               # Express application entry point (cookie-parser, CORS, Helmet)
-├── tests/                      # Jest test suite
+├── tests/                      # Jest test suite (39/39 passing)
 │   ├── database.test.js
 │   ├── auth.test.js
 │   ├── customer.test.js
 │   ├── services.test.js
 │   ├── cars.test.js
-│   └── parts.test.js
+│   ├── parts.test.js
+│   └── employee.test.js
 ├── design.md                   # Fidelity Modern design specifications
 ├── .env                        # Local environment configuration
 ├── .env.example                # Environment template
@@ -132,6 +135,7 @@ DB_PASSWORD=root
 DB_NAME=auto_repair_hub
 JWT_SECRET=auto_repair_hub_jwt_secret_key_2026_super_secure
 JWT_REFRESH_SECRET=auto_repair_hub_jwt_refresh_secret_key_2026_super_secure
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 ### 4. Start the Application
@@ -144,10 +148,10 @@ npm start
 Open your browser and navigate to:
 **[http://localhost:3000/login.html](http://localhost:3000/login.html)**
 
-### Default Profile Logins:
-- **Admin**: Username `admin` | Password `1234`
-- **Staff**: Username `staff` | Password `1234`
-- **Mechanic**: Username `mechanic` | Password `1234`
+### Seeded Database Logins (Strict bcrypt verification, no backdoor bypass):
+- **Admin**: Username `admin` | Password `Admin@123`
+- **Staff**: Username `staff` | Password `Admin@123`
+- **Mechanic**: Username `mechanic` | Password `Admin@123`
 
 ---
 

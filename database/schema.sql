@@ -103,10 +103,11 @@ CREATE INDEX idx_service_status ON ServiceJob(status);
 CREATE INDEX idx_part_number ON Part(part_number);
 
 -- Seed Data: System Users (Admin, Staff, Mechanic)
+-- Seed Data: Users (Default password for admin, staff, mechanic is 'Admin@123')
 INSERT INTO User (username, password_hash, role) VALUES 
-('admin', '$2a$10$7R0Z4K0mJ6N5bWwU3D5e0eX7N8M9L0K1J2H3G4F5E6D7C8B9A0', 'admin'),
-('staff', '$2a$10$7R0Z4K0mJ6N5bWwU3D5e0eX7N8M9L0K1J2H3G4F5E6D7C8B9A0', 'staff'),
-('mechanic', '$2a$10$7R0Z4K0mJ6N5bWwU3D5e0eX7N8M9L0K1J2H3G4F5E6D7C8B9A0', 'mechanic');
+('admin', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'admin'),
+('staff', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'staff'),
+('mechanic', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'mechanic');
 
 -- Seed Data: 10 Customers
 INSERT INTO Customer (name, phone, email) VALUES

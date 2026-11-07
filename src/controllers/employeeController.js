@@ -1,10 +1,15 @@
 const db = require('../config/database');
 
+const parseId = (id) => {
+    const parsed = parseInt(id, 10);
+    return isNaN(parsed) || parsed <= 0 ? null : parsed;
+};
+
 const getEmployees = async (req, res, next) => {
     try {
         const search = req.query.search || '';
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
         const offset = (page - 1) * limit;
 
         let query = 'SELECT * FROM Employee WHERE is_deleted = FALSE';
@@ -22,12 +27,12 @@ const getEmployees = async (req, res, next) => {
 
         const [rows] = await db.query(query, [...queryParams, limit, offset]);
         const [countResult] = await db.query(countQuery, queryParams);
-        const total = countResult[0].total;
+        const total = countResult && countResult[0] ? countResult[0].total : 0;
 
         res.json({
             success: true,
             data: rows,
-            pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+            pagination: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 }
         });
     } catch (err) {
         next(err);
@@ -36,10 +41,14 @@ const getEmployees = async (req, res, next) => {
 
 const getEmployeeById = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const [rows] = await db.query('SELECT * FROM Employee WHERE employee_id = ? AND is_deleted = FALSE', [id]);
+        const employeeId = parseId(req.params.id);
+        if (!employeeId) {
+            return res.status(400).json({ success: false, message: 'Invalid employee ID parameter' });
+        }
 
-        if (rows.length === 0) {
+        const [rows] = await db.query('SELECT * FROM Employee WHERE employee_id = ? AND is_deleted = FALSE', [employeeId]);
+
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Employee not found' });
         }
 
@@ -53,13 +62,23 @@ const createEmployee = async (req, res, next) => {
     try {
         const { name, role, phone, salary } = req.body;
 
-        if (!name || !role) {
-            return res.status(400).json({ success: false, message: 'Name and Role are required' });
+        if (!name || typeof name !== 'string' || !name.trim() || 
+            !role || typeof role !== 'string' || !role.trim()) {
+            return res.status(400).json({ success: false, message: 'Name and Role are required strings' });
+        }
+
+        const cleanName = name.trim();
+        const cleanRole = role.trim();
+        const cleanPhone = phone && typeof phone === 'string' && phone.trim() ? phone.trim() : null;
+        const cleanSalary = salary !== undefined ? parseFloat(salary) : 0.00;
+
+        if (isNaN(cleanSalary) || cleanSalary < 0) {
+            return res.status(400).json({ success: false, message: 'Salary cannot be negative' });
         }
 
         const [result] = await db.query(
             'INSERT INTO Employee (name, role, phone, salary) VALUES (?, ?, ?, ?)',
-            [name, role, phone || null, salary || 0.00]
+            [cleanName, cleanRole, cleanPhone, cleanSalary]
         );
 
         res.status(201).json({
@@ -74,16 +93,34 @@ const createEmployee = async (req, res, next) => {
 
 const updateEmployee = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const employeeId = parseId(req.params.id);
+        if (!employeeId) {
+            return res.status(400).json({ success: false, message: 'Invalid employee ID parameter' });
+        }
+
         const { name, role, phone, salary } = req.body;
 
-        if (!name || !role) {
-            return res.status(400).json({ success: false, message: 'Name and Role are required' });
+        if (name === undefined && role === undefined && phone === undefined && salary === undefined) {
+            return res.status(400).json({ success: false, message: 'No valid update fields provided' });
+        }
+
+        const cleanName = name !== undefined && typeof name === 'string' ? name.trim() : null;
+        const cleanRole = role !== undefined && typeof role === 'string' ? role.trim() : null;
+        const cleanPhone = phone !== undefined ? (phone && typeof phone === 'string' ? phone.trim() : null) : null;
+        const cleanSalary = salary !== undefined ? parseFloat(salary) : null;
+
+        if (cleanSalary !== null && (isNaN(cleanSalary) || cleanSalary < 0)) {
+            return res.status(400).json({ success: false, message: 'Salary cannot be negative' });
         }
 
         const [result] = await db.query(
-            'UPDATE Employee SET name = ?, role = ?, phone = ?, salary = ? WHERE employee_id = ? AND is_deleted = FALSE',
-            [name, role, phone || null, salary || 0.00, id]
+            `UPDATE Employee 
+             SET name = COALESCE(?, name), 
+                 role = COALESCE(?, role), 
+                 phone = COALESCE(?, phone), 
+                 salary = COALESCE(?, salary) 
+             WHERE employee_id = ? AND is_deleted = FALSE`,
+            [cleanName, cleanRole, cleanPhone, cleanSalary, employeeId]
         );
 
         if (result.affectedRows === 0) {
@@ -98,12 +135,15 @@ const updateEmployee = async (req, res, next) => {
 
 const deleteEmployee = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        // Soft Delete
-        const [result] = await db.query('UPDATE Employee SET is_deleted = TRUE WHERE employee_id = ?', [id]);
+        const employeeId = parseId(req.params.id);
+        if (!employeeId) {
+            return res.status(400).json({ success: false, message: 'Invalid employee ID parameter' });
+        }
+
+        const [result] = await db.query('UPDATE Employee SET is_deleted = TRUE WHERE employee_id = ? AND is_deleted = FALSE', [employeeId]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Employee not found' });
+            return res.status(404).json({ success: false, message: 'Employee not found or already deleted' });
         }
 
         res.json({ success: true, message: 'Employee deleted successfully' });

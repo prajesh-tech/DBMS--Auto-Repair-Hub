@@ -1,3 +1,5 @@
+const path = require('path');
+
 const errorHandler = (err, req, res, next) => {
     console.error('[SERVER ERROR]:', err.stack || err.message || err);
 
@@ -12,6 +14,9 @@ const errorHandler = (err, req, res, next) => {
 };
 
 const notFound = (req, res, next) => {
+    if (req.accepts('html') && !req.path.startsWith('/api/')) {
+        return res.status(404).sendFile(path.join(__dirname, '../../public/404.html'));
+    }
     res.status(404).json({
         success: false,
         message: `Endpoint Not Found - [${req.method}] ${req.originalUrl}`

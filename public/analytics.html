@@ -3,9 +3,21 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="description" content="Financial analytics, labor efficiency, inventory telemetry, and revenue metrics for Auto Repair Hub."/>
     <meta content="web_dashboard" name="shell-type"/>
     <title>Auto Repair Hub - Shop Analytics &amp; Telemetry</title>
-    <link rel="icon" type="image/png" href="images/logo.png"/>
+    <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>

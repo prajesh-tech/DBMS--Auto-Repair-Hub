@@ -1,10 +1,15 @@
 const db = require('../config/database');
 
+const parseId = (id) => {
+    const parsed = parseInt(id, 10);
+    return isNaN(parsed) || parsed <= 0 ? null : parsed;
+};
+
 const getCustomers = async (req, res, next) => {
     try {
         const search = req.query.search || '';
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
         const offset = (page - 1) * limit;
 
         let query = 'SELECT * FROM Customer WHERE is_deleted = FALSE';
@@ -23,7 +28,7 @@ const getCustomers = async (req, res, next) => {
         const [rows] = await db.query(query, [...queryParams, limit, offset]);
         const [countResult] = await db.query(countQuery, queryParams);
 
-        const total = countResult[0].total;
+        const total = countResult && countResult[0] ? countResult[0].total : 0;
 
         res.json({
             success: true,
@@ -32,7 +37,7 @@ const getCustomers = async (req, res, next) => {
                 total,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit)
+                totalPages: Math.ceil(total / limit) || 1
             }
         });
     } catch (err) {
@@ -42,10 +47,14 @@ const getCustomers = async (req, res, next) => {
 
 const getCustomerById = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const [rows] = await db.query('SELECT * FROM Customer WHERE customer_id = ? AND is_deleted = FALSE', [id]);
+        const customerId = parseId(req.params.id);
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: 'Invalid customer ID parameter' });
+        }
 
-        if (rows.length === 0) {
+        const [rows] = await db.query('SELECT * FROM Customer WHERE customer_id = ? AND is_deleted = FALSE', [customerId]);
+
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Customer not found' });
         }
 
@@ -59,13 +68,17 @@ const createCustomer = async (req, res, next) => {
     try {
         const { name, phone, email } = req.body;
 
-        if (!name || !phone) {
-            return res.status(400).json({ success: false, message: 'Name and Phone are required' });
+        if (!name || typeof name !== 'string' || !name.trim() || !phone || typeof phone !== 'string' || !phone.trim()) {
+            return res.status(400).json({ success: false, message: 'Name and Phone are required strings' });
         }
+
+        const cleanName = name.trim();
+        const cleanPhone = phone.trim();
+        const cleanEmail = email && typeof email === 'string' && email.trim() ? email.trim() : null;
 
         const [result] = await db.query(
             'INSERT INTO Customer (name, phone, email) VALUES (?, ?, ?)',
-            [name, phone, email || null]
+            [cleanName, cleanPhone, cleanEmail]
         );
 
         res.status(201).json({
@@ -80,16 +93,28 @@ const createCustomer = async (req, res, next) => {
 
 const updateCustomer = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const { name, phone, email } = req.body;
-
-        if (!name || !phone) {
-            return res.status(400).json({ success: false, message: 'Name and Phone are required' });
+        const customerId = parseId(req.params.id);
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: 'Invalid customer ID parameter' });
         }
 
+        const { name, phone, email } = req.body;
+
+        if (name === undefined && phone === undefined && email === undefined) {
+            return res.status(400).json({ success: false, message: 'No valid update fields provided' });
+        }
+
+        const cleanName = name !== undefined && typeof name === 'string' ? name.trim() : null;
+        const cleanPhone = phone !== undefined && typeof phone === 'string' ? phone.trim() : null;
+        const cleanEmail = email !== undefined ? (email && typeof email === 'string' ? email.trim() : null) : null;
+
         const [result] = await db.query(
-            'UPDATE Customer SET name = ?, phone = ?, email = ? WHERE customer_id = ? AND is_deleted = FALSE',
-            [name, phone, email || null, id]
+            `UPDATE Customer 
+             SET name = COALESCE(?, name), 
+                 phone = COALESCE(?, phone), 
+                 email = COALESCE(?, email) 
+             WHERE customer_id = ? AND is_deleted = FALSE`,
+            [cleanName, cleanPhone, cleanEmail, customerId]
         );
 
         if (result.affectedRows === 0) {
@@ -104,12 +129,18 @@ const updateCustomer = async (req, res, next) => {
 
 const deleteCustomer = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        // Soft Delete
-        const [result] = await db.query('UPDATE Customer SET is_deleted = TRUE WHERE customer_id = ?', [id]);
+        const customerId = parseId(req.params.id);
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: 'Invalid customer ID parameter' });
+        }
+
+        const [result] = await db.query(
+            'UPDATE Customer SET is_deleted = TRUE WHERE customer_id = ? AND is_deleted = FALSE',
+            [customerId]
+        );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Customer not found' });
+            return res.status(404).json({ success: false, message: 'Customer not found or already deleted' });
         }
 
         res.json({ success: true, message: 'Customer deleted successfully' });

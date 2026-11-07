@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
+const { ALLOWED_ORIGINS, isProduction } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 
 const authRoutes = require('./routes/authRoutes');
@@ -23,8 +24,27 @@ app.use(helmet({
     contentSecurityPolicy: false // Allow static scripts and CSS
 }));
 
+// Allowed origins handling
+const allowedOriginsList = ALLOWED_ORIGINS
+    ? ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    : [];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (!isProduction) return callback(null, true);
+        if (allowedOriginsList.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Blocked by CORS policy: Origin not allowed'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
 // Global Middlewares
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

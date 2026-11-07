@@ -3,9 +3,21 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="description" content="Secure telemetric operations and fleet diagnostics login for Auto Repair Hub."/>
     <meta content="web_blank" name="shell-type"/>
     <title>Auto Repair Hub - Telemetric Operations Login</title>
-    <link rel="icon" type="image/png" href="images/logo.png"/>
+    <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -160,7 +172,7 @@
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
                         <label for="passwordField" class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Access Cipher / Password</label>
-                        <a class="text-xs text-secondary hover:text-secondary-container font-medium transition-colors cursor-pointer" onclick="Toast.info('Default test passwords are: 1234')">Forgot Cipher?</a>
+                        <a class="text-xs text-secondary hover:text-secondary-container font-medium transition-colors cursor-pointer" onclick="Toast.info('Default seeded DB credentials: Admin@123')">Default Passwords?</a>
                     </div>
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none transition-colors duration-200">lock</span>
@@ -177,7 +189,7 @@
                         <input checked="" class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer accent-secondary" type="checkbox"/>
                         <span class="text-xs text-on-surface-variant font-medium">Remember terminal</span>
                     </label>
-                    <button class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-medium transition-colors" type="button" onclick="fillRole('staff', '1234')">
+                    <button class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-medium transition-colors" type="button" onclick="fillRole('staff', 'Admin@123')">
                         <span class="material-symbols-outlined text-secondary text-[16px]">badge</span>
                         <span>Staff Quick-fill</span>
                     </button>
@@ -194,18 +206,18 @@
             <!-- Alternative Telemetry Sign-In Method -->
             <div class="relative my-6 flex items-center justify-center">
                 <div class="w-full h-px bg-surface-container-high"></div>
-                <span class="absolute bg-surface-container-lowest px-3 text-[11px] uppercase tracking-wider text-outline font-semibold">Or quick role preset</span>
+                <span class="absolute bg-surface-container-lowest px-3 text-[11px] uppercase tracking-wider text-outline font-semibold">Or quick role preset (DB bcrypt verification)</span>
             </div>
 
             <!-- Instant Role Presets -->
             <div class="grid grid-cols-2 gap-2.5">
-                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('admin', '1234')" type="button">
+                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('admin', 'Admin@123')" type="button">
                     <span class="material-symbols-outlined text-secondary text-[18px]">shield_person</span>
-                    <span class="text-xs font-semibold">Admin (1234)</span>
+                    <span class="text-xs font-semibold">Admin (Admin@123)</span>
                 </button>
-                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('mechanic', '1234')" type="button">
+                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('mechanic', 'Admin@123')" type="button">
                     <span class="material-symbols-outlined text-tertiary text-[18px]">build</span>
-                    <span class="text-xs font-semibold">Mechanic (1234)</span>
+                    <span class="text-xs font-semibold">Mechanic (Admin@123)</span>
                 </button>
             </div>
 
@@ -234,7 +246,7 @@
                     <span>99.98% Uptime</span>
                 </span>
             </div>
-            <a class="hover:text-on-surface text-outline transition-colors underline-offset-4 hover:underline" href="#">
+            <a class="hover:text-on-surface text-outline transition-colors underline-offset-4 hover:underline" href="index.html">
                 Auto Repair Hub v2.0
             </a>
         </div>

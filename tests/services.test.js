@@ -93,7 +93,6 @@ describe('Services API & Work Order RBAC Tests', () => {
     it('should allow mechanic to update job status and notes', async () => {
         mockVerifiedUser(db, USERS.mechanic);
         db.query
-            .mockResolvedValueOnce([[{ job_id: 12, status: 'In Progress' }]])
             .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
         const res = await request(app)

@@ -2,7 +2,7 @@
  * Redesigned according to design.md and brand identity emblem
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('fonts.css');
 
 :root {
     /* Fidelity Modern Color Palette (design.md) */
@@ -21,7 +21,7 @@
     --outline: #747878;
     --outline-variant: #c4c7c8;
     --surface-tint: #5d5f5f;
-    
+
     /* Core Brand Accents matching logo */
     --brand-dark: #19212c;
     --brand-steel: #2a3545;
@@ -1015,3 +1015,166 @@ code.vin-code {
         max-width: none;
     }
 }
+
+:root {
+  --rgb-error-container: 255 218 214;
+  --rgb-on-tertiary-fixed-variant: 0 83 10;
+  --rgb-tertiary-container: 255 255 255;
+  --rgb-on-primary-container: 116 118 118;
+  --rgb-on-primary-fixed-variant: 69 71 71;
+  --rgb-on-error: 255 255 255;
+  --rgb-tertiary-fixed: 116 255 108;
+  --rgb-tertiary-fixed-dim: 0 230 48;
+  --rgb-background: 252 248 248;
+  --rgb-surface-container-highest: 229 226 225;
+  --rgb-on-surface-variant: 68 71 72;
+  --rgb-primary: 0 80 215;
+  --rgb-primary-fixed: 226 226 226;
+  --rgb-secondary-container: 43 105 250;
+  --rgb-surface-container-lowest: 255 255 255;
+  --rgb-on-error-container: 147 0 10;
+  --rgb-surface-bright: 252 248 248;
+  --rgb-surface-tint: 93 95 95;
+  --rgb-on-primary: 255 255 255;
+  --rgb-inverse-on-surface: 244 240 239;
+  --rgb-primary-fixed-dim: 198 198 199;
+  --rgb-error: 186 26 26;
+  --rgb-on-tertiary: 255 255 255;
+  --rgb-on-tertiary-container: 0 137 24;
+  --rgb-tertiary: 0 110 17;
+  --rgb-outline-variant: 196 199 200;
+  --rgb-on-secondary-container: 254 252 255;
+  --rgb-primary-container: 255 255 255;
+  --rgb-on-secondary-fixed-variant: 0 61 169;
+  --rgb-surface: 252 248 248;
+  --rgb-surface-container-high: 235 231 231;
+  --rgb-on-primary-fixed: 26 28 28;
+  --rgb-inverse-primary: 198 198 199;
+  --rgb-on-surface: 28 27 27;
+  --rgb-secondary: 43 105 250;
+  --rgb-on-tertiary-fixed: 0 34 2;
+  --rgb-inverse-surface: 49 48 48;
+  --rgb-surface-variant: 229 226 225;
+  --rgb-on-secondary-fixed: 0 23 76;
+  --rgb-secondary-fixed-dim: 180 197 255;
+  --rgb-on-secondary: 255 255 255;
+  --rgb-secondary-fixed: 219 225 255;
+  --rgb-on-background: 28 27 27;
+  --rgb-surface-dim: 221 217 217;
+  --rgb-surface-container: 241 237 236;
+  --rgb-surface-container-low: 246 243 242;
+  --rgb-outline: 116 120 120;
+  --rgb-brand-dark: 25 33 44;
+  --rgb-brand-steel: 42 53 69;
+  --rgb-brand-blue: 0 80 215;
+  --rgb-brand-blue-hover: 4 88 233;
+  --rgb-brand-blue-subtle: 219 225 255;
+  --rgb-brand-green: 0 137 24;
+  --rgb-brand-green-accent: 18 255 57;
+  --rgb-brand-green-subtle: 220 252 231;
+  --rgb-primary-hover: 4 88 233;
+  --rgb-primary-light: 238 242 255;
+  --rgb-secondary-hover: 30 82 219;
+  --rgb-tertiary-accent: 18 255 57;
+  --rgb-danger: 186 26 26;
+  --rgb-danger-hover: 147 0 10;
+  --rgb-danger-light: 255 218 214;
+  --rgb-warning: 180 83 9;
+  --rgb-warning-light: 254 243 199;
+  --rgb-success: 0 137 24;
+  --rgb-success-light: 209 250 229;
+  --rgb-bg-body: 249 249 255;
+  --rgb-card-bg-solid: 242 243 253;
+  --rgb-text-primary: 24 28 34;
+  --rgb-text-secondary: 65 71 83;
+  --rgb-text-muted: 113 119 133;
+  --rgb-table-th-text: 24 28 34;
+  --rgb-input-focus-border: 0 80 215;
+}
+html.dark {
+  --rgb-bg-body: 13 17 23;
+  --rgb-surface: 19 25 34;
+  --rgb-surface-dim: 13 17 23;
+  --rgb-surface-bright: 28 36 48;
+  --rgb-surface-container-lowest: 20 26 36;
+  --rgb-surface-container-low: 24 32 44;
+  --rgb-surface-container: 30 40 55;
+  --rgb-surface-container-high: 36 48 66;
+  --rgb-surface-container-highest: 43 58 78;
+  --rgb-card-bg-solid: 24 32 44;
+  --rgb-text-primary: 248 250 252;
+  --rgb-text-secondary: 148 163 184;
+  --rgb-text-muted: 100 116 139;
+  --rgb-primary: 59 130 246;
+  --rgb-primary-hover: 96 165 250;
+  --rgb-secondary: 96 165 250;
+  --rgb-tertiary: 16 185 129;
+  --rgb-tertiary-accent: 52 211 153;
+  --rgb-table-th-text: 226 232 240;
+  --rgb-input-focus-border: 59 130 246;
+  --rgb-on-surface: 248 250 252;
+  --rgb-on-surface-variant: 148 163 184;
+  --rgb-outline-variant: 65 71 83;
+  --rgb-secondary-fixed: 25 55 107;
+  --rgb-on-secondary-fixed: 219 225 255;
+  --rgb-secondary-container: 43 105 250;
+  --rgb-on-secondary: 255 255 255;
+  --rgb-on-secondary-container: 255 255 255;
+}
+
+/* Shared application chrome and accessible interaction states. */
+[hidden] { display: none !important; }
+body[data-protected]:not(.auth-ready) { visibility: hidden; }
+body { overflow-wrap: anywhere; }
+main, main > div, .grid > *, .flex > * { min-width: 0; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid var(--brand-blue); outline-offset: 3px; }
+.layout-sidebar { position: fixed; inset: 0 auto 0 0; width: 18rem; padding: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 1.5rem; background: var(--nav-glass-bg); border-right: 1px solid var(--border-color); backdrop-filter: blur(20px); }
+.layout-sidebar nav { flex: 1; }
+.layout-brand { display: flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--on-surface); }
+.layout-link { display: flex; align-items: center; gap: .75rem; padding: .75rem; border-radius: .5rem; color: var(--text-secondary); font-size: .875rem; }
+.layout-link.active { background: var(--brand-blue); color: var(--on-secondary, white); font-weight: 600; }
+.layout-link:hover { background: var(--surface-container-high); color: var(--text-primary); }
+.layout-header { position: fixed; inset: 0 0 auto 18rem; height: 4rem; z-index: 40; display: flex; align-items: center; gap: .75rem; padding: 0 1rem; background: var(--header-glass-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); }
+.layout-title { font-weight: 600; margin-right: auto; }
+.layout-header input { max-width: 22rem; min-width: 0; }
+#userBadge { font-size: .75rem; white-space: nowrap; }
+.layout-mobile-toggle, .layout-bottom { display: none; }
+.layout-drawer { position: fixed; inset: 4rem 0 4rem 0; background: var(--surface); z-index: 60; overflow-y: auto; padding: 1rem; }
+.layout-bottom { position: fixed; inset: auto 0 0 0; background: var(--surface); border-top: 1px solid var(--border-color); z-index: 50; height: 4rem; overflow-x: auto; }
+.layout-bottom .layout-link { flex-direction: column; flex: 1 0 4.5rem; gap: 0; padding: .5rem; font-size: .65rem; white-space: nowrap; }
+.modal-footer { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+.modal-body { margin-top: 1rem; }
+.modal-body label { display: block; margin-top: .75rem; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: .65rem; border: 1px solid var(--input-border); border-radius: .5rem; background: var(--input-bg); color: var(--text-primary); }
+#cpError { color: var(--error); margin-top: .75rem; }
+.toast-leaving { opacity: 0; transition: opacity .3s ease; }
+.list-state { padding: 2rem 1rem; text-align: center; color: var(--text-secondary); }
+@media (max-width: 1023px) {
+  .layout-sidebar { display: none; }
+  .layout-header { left: 0; }
+  .layout-mobile-toggle { display: inline-flex; }
+  .layout-bottom { display: flex; }
+}
+@media (max-width: 639px) {
+  .layout-title { font-size: .8rem; }
+  .layout-header input { display: none; }
+  #userBadge { max-width: 7rem; overflow: hidden; text-overflow: ellipsis; }
+  .layout-header { gap: .4rem; padding: 0 .5rem; }
+}
+.idle-countdown { color: var(--brand-blue); font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 1rem 0; }
+#stock-modal { z-index: 100; }
+
+[data-car-color="red"] { background: var(--error); }
+[data-car-color="blue"] { background: var(--brand-blue); }
+[data-car-color="green"] { background: var(--brand-green); }
+[data-car-color="black"] { background: var(--brand-dark); }
+[data-car-color="white"] { background: var(--surface-container-lowest); }
+[data-car-color="silver"] { background: var(--outline-variant); }
+[data-car-color="gray"] { background: var(--outline); }
+[data-car-color] { background: var(--outline); }
+[data-car-color*="red"] { background: var(--error); }
+[data-car-color*="blue"] { background: var(--brand-blue); }
+[data-car-color*="black"] { background: var(--brand-dark); }
+[data-car-color*="white"] { background: var(--surface-container-lowest); }
+[data-car-color*="silver"], [data-car-color*="gray"], [data-car-color*="grey"] { background: var(--outline-variant); }
+[data-car-color*="green"] { background: var(--brand-green); }

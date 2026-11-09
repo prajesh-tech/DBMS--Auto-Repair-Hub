@@ -1,18 +1,14 @@
 # Testing Specification: Auto Repair Hub
 
-## 1. Testing Framework
-- **Jest**: Primary test runner and assertion framework.
-- **Supertest**: HTTP assertion library for integration testing Express endpoints.
+## Automated checks
+Run `npm test` for Jest and Supertest suites. Database calls are mocked: these checks exercise HTTP status codes, server role checks, auth cookies, CSRF, refresh/replay failure handling, password validation, mechanic assignment predicates, inventory operations, strict CSP headers, HTML escaping, and shared frontend refresh behavior.
 
-## 2. Test Suites (6 Passed / 6 Total - 20/20 Tests Passing)
-- **`tests/database.test.js`**: Connection pool initialization and query execution tests.
-- **`tests/auth.test.js`**: Login authentication, password verification, and endpoint token protection tests.
-- **`tests/customer.test.js`**: Customer REST API CRUD and pagination search tests.
-- **`tests/services.test.js`**: Work order CRUD, transactional inventory deduction, zero-stock blocking, and stock restoration on job deletion.
-- **`tests/cars.test.js`**: Vehicle fleet CRUD, VIN uniqueness, customer linking, and search tests.
-- **`tests/parts.test.js`**: Inventory parts CRUD, stock quantity updates, and deletion tests.
+Tests use isolated fixtures and do not require seed data. Test-only JWT secrets are configured by `tests/setupEnv.js`, not application fallbacks. Mutating authenticated test requests include both the cookie and CSRF header.
 
-## 3. Running Automated Tests
-```bash
-npm test
-```
+## Disposable local database verification
+`RUN_LOCAL_DB_TESTS=1 node scripts/verify-local-database.js` requires a loopback DB_HOST and credentials allowed to create a database. It creates a randomly named test database, upgrades a legacy schema twice, verifies preserved shop/account records, tests concurrent refresh rotation and replay revocation, then removes that database. Application database contents remain untouched.
+
+## Frontend verification
+Run `npm run build` to compile the pinned Tailwind CLI configuration. Static security tests reject inline scripts, event attributes, inline styles, remote page assets, and permissive CSP. Shared escaping and confirmation text have XSS regressions; the API wrapper has a concurrent-refresh test.
+
+Browser rendering, keyboard focus behavior, and console CSP checks at 360px, 768px, and 1280px are not verified by Jest. Manual browser verification remains outstanding; no browser tooling dependency was authorized.

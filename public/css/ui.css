@@ -1,0 +1,202 @@
+/* Shared Fidelity Modern surfaces and controls. */
+:root {
+  --navigation-rail: 4.75rem;
+  --navigation-width: 18rem;
+}
+
+html { min-height: 100%; }
+body[data-page] {
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+  background: var(--bg-body);
+  color: var(--text-primary);
+}
+body[data-page]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 8% 10%, rgb(var(--rgb-secondary) / 0.16), transparent 65%),
+    radial-gradient(ellipse at 95% 85%, rgb(var(--rgb-tertiary) / 0.12), transparent 60%),
+    var(--bg-body);
+}
+body[data-page] > .fixed.pointer-events-none,
+body[data-page="login"] main > div > .absolute { display: none; }
+body[data-page] main { background: transparent; }
+body[data-page="login"] main {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+body[data-page="login"] main > div { overflow: visible; }
+
+/* Solid foregrounds keep active labels readable over the ambient background. */
+body[data-page] .layout-sidebar,
+body[data-page] .layout-header,
+body[data-page] .layout-drawer,
+body[data-page] .layout-bottom { background: var(--surface-container-lowest); }
+body[data-page] .layout-brand { color: var(--text-primary); }
+body[data-page] .layout-link { color: var(--text-primary); font-weight: 500; }
+body[data-page] .layout-link:hover { background: var(--surface-container); color: var(--text-primary); }
+body[data-page] .layout-link[aria-current="page"],
+body[data-page] .layout-link[aria-current="page"]:hover {
+  background: var(--brand-blue);
+  color: rgb(var(--rgb-on-secondary));
+  box-shadow: var(--shadow-xs);
+}
+body[data-page] .layout-link .material-symbols-outlined { flex-shrink: 0; }
+body[data-page] .layout-brand img { flex-shrink: 0; }
+body[data-page] .layout-header { gap: var(--space-sm); }
+body[data-page] .layout-title { color: var(--text-primary); }
+
+/* Consistent rounded actions, including refresh, pagination, theme and logout. */
+body[data-page] button {
+  border-radius: var(--rounded-default);
+  font-family: inherit;
+}
+body[data-page] .btn-secondary {
+  background: var(--surface-container);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+body[data-page] .btn-secondary:hover {
+  background: var(--surface-container-high);
+  color: var(--text-primary);
+}
+body[data-page] .theme-toggle-btn,
+body[data-page] .layout-mobile-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--rounded-md);
+}
+body[data-page] .theme-toggle-btn .material-symbols-outlined { font-size: 1.375rem; }
+body[data-page] .layout-logout {
+  min-height: 2.75rem;
+  gap: var(--space-sm);
+  font-weight: 600;
+}
+body[data-page] table button,
+body[data-page] #prevBtn,
+body[data-page] #nextBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 2.25rem;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--rounded-default);
+  background: var(--surface-container-lowest);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+body[data-page] table button .material-symbols-outlined { font-size: 1rem; }
+body[data-page] table button:hover { background: var(--primary-light); border-color: var(--primary); }
+body[data-page] table button[title*="Delete"],
+body[data-page] table button[title*="Remove"] { color: var(--danger); border-color: var(--danger); }
+body[data-page] table button[title*="Delete"]:hover,
+body[data-page] table button[title*="Remove"]:hover { background: var(--danger-light); color: var(--danger-hover); }
+html.dark body[data-page] table button[title*="Delete"],
+html.dark body[data-page] table button[title*="Remove"] { color: var(--danger-light); border-color: var(--danger-light); }
+body[data-page] button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+body[data-page] #prevBtn:disabled,
+body[data-page] #nextBtn:disabled { color: var(--text-secondary); }
+
+/* Eye controls never submit the password-change form. */
+.password-change-input { position: relative; }
+.password-change-modal .password-change-field .password-change-input input { padding-right: 3.5rem; }
+.password-change-input .password-visibility {
+  position: absolute;
+  right: var(--space-xs);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.password-change-input .password-visibility:hover { background: var(--surface-container); color: var(--primary); }
+
+@media (min-width: 1024px) {
+  .app-shell { padding-left: var(--navigation-rail); }
+  body[data-page] .layout-header { left: var(--navigation-rail); }
+  body[data-page] .layout-mobile-toggle { display: none; }
+  body[data-page] .layout-sidebar {
+    width: var(--navigation-rail);
+    padding: var(--space-sm);
+    overflow: hidden;
+    z-index: 60;
+    transition: width 0.2s ease, box-shadow 0.2s ease;
+  }
+  .layout-sidebar .layout-brand { width: max-content; height: 3rem; padding-left: 0.625rem; gap: var(--space-md); }
+  .layout-sidebar .layout-link { height: 3rem; padding: var(--space-sm) 1.125rem; gap: var(--space-md); white-space: nowrap; }
+  .layout-sidebar .layout-brand-name,
+  .layout-sidebar .layout-link-label,
+  .layout-sidebar .layout-logout-label {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+  }
+  .layout-sidebar .layout-logout { justify-content: flex-start; padding-left: 1.125rem; white-space: nowrap; }
+  .layout-sidebar .layout-logout svg { flex-shrink: 0; }
+  body[data-page] .layout-sidebar:hover,
+  body[data-page] .layout-sidebar:focus-within { width: var(--navigation-width); box-shadow: var(--shadow-md); }
+  .layout-sidebar:hover .layout-brand-name,
+  .layout-sidebar:hover .layout-link-label,
+  .layout-sidebar:hover .layout-logout-label,
+  .layout-sidebar:focus-within .layout-brand-name,
+  .layout-sidebar:focus-within .layout-link-label,
+  .layout-sidebar:focus-within .layout-logout-label { opacity: 1; visibility: visible; }
+}
+@media (max-width: 639px) {
+  body[data-page] .layout-header { gap: var(--space-xs); }
+  body[data-page] .layout-title { flex: 1; }
+  body[data-page] .layout-header input { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-page] .layout-sidebar,
+  .layout-sidebar .layout-brand-name,
+  .layout-sidebar .layout-link-label,
+  .layout-sidebar .layout-logout-label { transition: none; }
+}
+body[data-page] button[data-ui-action] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 2.25rem;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--rounded-default);
+  background: var(--surface-container);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+body[data-page] button[data-ui-action="primary"] { background: var(--brand-blue); color: rgb(var(--rgb-on-secondary)); border-color: var(--brand-blue); }
+body[data-page] button[data-ui-action="edit"] { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+body[data-page] button[data-ui-action="danger"] { background: var(--surface-container-lowest); color: var(--danger); border-color: var(--danger); }
+body[data-page] button[data-ui-action="danger"]:hover { background: var(--danger-light); color: var(--danger-hover); }
+html.dark body[data-page] button[data-ui-action="danger"] { color: var(--danger-light); border-color: var(--danger-light); }
+html.dark body[data-page] button[data-ui-action="danger"]:hover { color: var(--danger-hover); }
+@media (min-width: 1024px) {
+  .layout-sidebar nav { min-height: 0; overflow-x: hidden; overflow-y: auto; }
+}

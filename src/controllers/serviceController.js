@@ -6,8 +6,25 @@ const parseId = (id) => {
     return isNaN(parsed) || parsed <= 0 ? null : parsed;
 };
 
+const mechanicFields = `ServiceJob.job_id, ServiceJob.car_id, ServiceJob.employee_id,
+  ServiceJob.job_date, ServiceJob.description, ServiceJob.status,
+  Car.vin, Car.manufacturer, Car.model, Car.year`;
+const mechanicView = row => Object.fromEntries(
+  ['job_id', 'car_id', 'employee_id', 'job_date', 'description', 'status', 'vin', 'manufacturer', 'model', 'year']
+    .filter(key => Object.hasOwn(row, key)).map(key => [key, row[key]])
+);
+const requireEmployee = (req, res) => {
+  if (req.user.role === 'mechanic' && !req.user.employee_id) {
+    res.status(403).json({ success: false, message: 'An employee assignment is required' });
+    return false;
+  }
+  return true;
+};
+
 const getServices = async (req, res, next) => {
     try {
+        if (!requireEmployee(req, res)) return;
+        const mechanic = req.user.role === 'mechanic';
         const search = req.query.search || '';
         const statusFilter = req.query.status || '';
         const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -15,7 +32,7 @@ const getServices = async (req, res, next) => {
         const offset = (page - 1) * limit;
 
         let query = `
-            SELECT ServiceJob.*, 
+            SELECT ServiceJob.*,
                    Car.vin, Car.manufacturer, Car.model, Car.year,
                    Customer.name as customer_name, Customer.phone as customer_phone, Customer.email as customer_email,
                    Employee.name as employee_name, Employee.role as employee_role
@@ -24,6 +41,7 @@ const getServices = async (req, res, next) => {
             LEFT JOIN Customer ON Car.customer_id = Customer.customer_id
             LEFT JOIN Employee ON ServiceJob.employee_id = Employee.employee_id
         `;
+        if (mechanic) query = `SELECT ${mechanicFields} FROM ServiceJob LEFT JOIN Car ON ServiceJob.car_id = Car.car_id LEFT JOIN Customer ON Car.customer_id = Customer.customer_id`;
         let countQuery = `
             SELECT COUNT(*) as total
             FROM ServiceJob
@@ -33,10 +51,16 @@ const getServices = async (req, res, next) => {
         let conditions = [];
         let queryParams = [];
 
+        if (mechanic) {
+            conditions.push('ServiceJob.employee_id = ? AND EXISTS (SELECT 1 FROM Employee WHERE Employee.employee_id = ServiceJob.employee_id AND is_deleted = FALSE)');
+            queryParams.push(req.user.employee_id);
+        }
         if (search) {
-            conditions.push('(Customer.name LIKE ? OR Car.model LIKE ? OR Car.manufacturer LIKE ? OR ServiceJob.description LIKE ?)');
+            conditions.push(mechanic
+                ? '(Car.model LIKE ? OR Car.manufacturer LIKE ? OR ServiceJob.description LIKE ?)'
+                : '(Customer.name LIKE ? OR Car.model LIKE ? OR Car.manufacturer LIKE ? OR ServiceJob.description LIKE ?)');
             const term = `%${search}%`;
-            queryParams.push(term, term, term, term);
+            queryParams.push(...Array(mechanic ? 3 : 4).fill(term));
         }
 
         if (statusFilter) {
@@ -58,7 +82,7 @@ const getServices = async (req, res, next) => {
 
         res.json({
             success: true,
-            data: rows,
+            data: mechanic ? rows.map(mechanicView) : rows,
             pagination: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 }
         });
     } catch (err) {
@@ -68,13 +92,15 @@ const getServices = async (req, res, next) => {
 
 const getServiceById = async (req, res, next) => {
     try {
+        if (!requireEmployee(req, res)) return;
+        const mechanic = req.user.role === 'mechanic';
         const jobId = parseId(req.params.id);
         if (!jobId) {
             return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
         }
 
-        const [rows] = await db.query(`
-            SELECT ServiceJob.*, 
+        const query = `
+            SELECT ServiceJob.*,
                    Car.vin, Car.manufacturer, Car.model, Car.year, Car.color,
                    Customer.name as customer_name, Customer.phone as customer_phone, Customer.email as customer_email,
                    Employee.name as employee_name, Employee.role as employee_role
@@ -83,11 +109,16 @@ const getServiceById = async (req, res, next) => {
             LEFT JOIN Customer ON Car.customer_id = Customer.customer_id
             LEFT JOIN Employee ON ServiceJob.employee_id = Employee.employee_id
             WHERE ServiceJob.job_id = ?
-        `, [jobId]);
+        `;
+        const [rows] = await db.query(mechanic
+            ? `SELECT ${mechanicFields} FROM ServiceJob LEFT JOIN Car ON ServiceJob.car_id = Car.car_id WHERE job_id = ? AND ServiceJob.employee_id = ? AND EXISTS (SELECT 1 FROM Employee WHERE Employee.employee_id = ServiceJob.employee_id AND is_deleted = FALSE)`
+            : query, mechanic ? [jobId, req.user.employee_id] : [jobId]);
 
         if (!rows || rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Service job not found' });
         }
+
+        if (mechanic) return res.json({ success: true, data: mechanicView(rows[0]) });
 
         // Fetch assigned parts
         const [parts] = await db.query(`
@@ -108,9 +139,9 @@ const createService = async (req, res, next) => {
         const { car_id, employee_id, job_date, description, total_cost, status } = req.body;
 
         if (!car_id || !job_date || !description) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Car ID, Job Date, and Description are required' 
+            return res.status(400).json({
+                success: false,
+                message: 'Car ID, Job Date, and Description are required'
             });
         }
 
@@ -119,8 +150,8 @@ const createService = async (req, res, next) => {
         const cleanDate = new Date(job_date);
         const cleanDesc = String(description).trim();
         const cleanCost = total_cost !== undefined ? parseFloat(total_cost) : 0.00;
-        const cleanStatus = status && ['Pending', 'In Progress', 'Completed', 'Cancelled'].includes(status) 
-            ? status 
+        const cleanStatus = status && ['Pending', 'In Progress', 'Completed'].includes(status)
+            ? status
             : 'Pending';
 
         if (isNaN(cleanCarId) || cleanCarId <= 0) {
@@ -171,8 +202,9 @@ const createService = async (req, res, next) => {
 };
 
 const addPartToServiceJob = async (req, res, next) => {
-    const conn = await db.getConnection();
+    let conn;
     try {
+        conn = await db.getConnection();
         const jobId = parseId(req.params.id);
         const partId = parseId(req.body.part_id);
         const qty = parseInt(req.body.quantity, 10) || 1;
@@ -251,15 +283,15 @@ const addPartToServiceJob = async (req, res, next) => {
             addedCost: itemTotalCost
         });
     } catch (err) {
-        await conn.rollback();
-        conn.release();
+        if (conn) { await conn.rollback(); conn.release(); }
         next(err);
     }
 };
 
 const removePartFromServiceJob = async (req, res, next) => {
-    const conn = await db.getConnection();
+    let conn;
     try {
+        conn = await db.getConnection();
         const jobId = parseId(req.params.id);
         const jobPartId = parseId(req.params.jobPartId);
 
@@ -304,14 +336,14 @@ const removePartFromServiceJob = async (req, res, next) => {
 
         res.json({ success: true, message: 'Assigned part removed and inventory restored successfully' });
     } catch (err) {
-        await conn.rollback();
-        conn.release();
+        if (conn) { await conn.rollback(); conn.release(); }
         next(err);
     }
 };
 
 const updateService = async (req, res, next) => {
     try {
+        if (!requireEmployee(req, res)) return;
         const jobId = parseId(req.params.id);
         if (!jobId) {
             return res.status(400).json({ success: false, message: 'Invalid service job ID parameter' });
@@ -319,14 +351,14 @@ const updateService = async (req, res, next) => {
 
         const { car_id, employee_id, job_date, description, total_cost, status } = req.body;
 
-        if (car_id === undefined && employee_id === undefined && job_date === undefined && 
+        if (car_id === undefined && employee_id === undefined && job_date === undefined &&
             description === undefined && total_cost === undefined && status === undefined) {
             return res.status(400).json({ success: false, message: 'No valid update fields provided' });
         }
 
         // Mechanic role guardrail: mechanics can only update status and description
         if (req.user && req.user.role === 'mechanic') {
-            if (car_id !== undefined || employee_id !== undefined || total_cost !== undefined) {
+            if (Object.keys(req.body).some(key => !['status', 'description'].includes(key))) {
                 return res.status(403).json({
                     success: false,
                     message: 'Forbidden: Mechanics are only permitted to update job status and progress notes'
@@ -338,7 +370,7 @@ const updateService = async (req, res, next) => {
         const cleanEmpId = employee_id !== undefined ? (employee_id ? parseId(employee_id) : null) : null;
         const cleanDesc = description !== undefined && typeof description === 'string' ? description.trim() : null;
         const cleanCost = total_cost !== undefined ? parseFloat(total_cost) : null;
-        const cleanStatus = status !== undefined && ['Pending', 'In Progress', 'Completed', 'Cancelled'].includes(status) ? status : null;
+        const cleanStatus = status !== undefined && ['Pending', 'In Progress', 'Completed'].includes(status) ? status : null;
         let cleanDate = null;
 
         if (job_date !== undefined) {
@@ -353,14 +385,23 @@ const updateService = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Total cost cannot be negative' });
         }
 
+        if (req.user.role === 'mechanic') {
+            const [result] = await db.query(
+                `UPDATE ServiceJob SET description = COALESCE(?, description), status = COALESCE(?, status)
+                 WHERE job_id = ? AND employee_id = ? AND EXISTS (SELECT 1 FROM Employee WHERE Employee.employee_id = ServiceJob.employee_id AND is_deleted = FALSE)`,
+                [cleanDesc, cleanStatus, jobId, req.user.employee_id]
+            );
+            if (!result.affectedRows) return res.status(404).json({ success: false, message: 'Service job not found' });
+            return res.json({ success: true, message: 'Service job updated successfully' });
+        }
         const [result] = await db.query(
-            `UPDATE ServiceJob 
-             SET car_id = COALESCE(?, car_id), 
-                 employee_id = COALESCE(?, employee_id), 
-                 job_date = COALESCE(?, job_date), 
-                 description = COALESCE(?, description), 
-                 total_cost = COALESCE(?, total_cost), 
-                 status = COALESCE(?, status) 
+            `UPDATE ServiceJob
+             SET car_id = COALESCE(?, car_id),
+                 employee_id = COALESCE(?, employee_id),
+                 job_date = COALESCE(?, job_date),
+                 description = COALESCE(?, description),
+                 total_cost = COALESCE(?, total_cost),
+                 status = COALESCE(?, status)
              WHERE job_id = ?`,
             [cleanCarId, cleanEmpId, cleanDate, cleanDesc, cleanCost, cleanStatus, jobId]
         );
@@ -376,8 +417,9 @@ const updateService = async (req, res, next) => {
 };
 
 const deleteService = async (req, res, next) => {
-    const conn = await db.getConnection();
+    let conn;
     try {
+        conn = await db.getConnection();
         const jobId = parseId(req.params.id);
         if (!jobId) {
             conn.release();
@@ -412,8 +454,7 @@ const deleteService = async (req, res, next) => {
 
         res.json({ success: true, message: 'Service job and linked inventory entries deleted/restored successfully' });
     } catch (err) {
-        await conn.rollback();
-        conn.release();
+        if (conn) { await conn.rollback(); conn.release(); }
         next(err);
     }
 };
@@ -426,7 +467,7 @@ const downloadInvoicePDF = async (req, res, next) => {
         }
 
         const [rows] = await db.query(`
-            SELECT ServiceJob.*, 
+            SELECT ServiceJob.*,
                    Car.vin, Car.manufacturer, Car.model, Car.year, Car.color,
                    Customer.name as customer_name, Customer.phone as customer_phone, Customer.email as customer_email,
                    Employee.name as employee_name
@@ -513,7 +554,15 @@ const downloadInvoicePDF = async (req, res, next) => {
     }
 };
 
+const getTechnicians = async (req, res, next) => {
+    try {
+        const [data] = await db.query('SELECT employee_id, name, role FROM Employee WHERE is_deleted = FALSE ORDER BY name');
+        res.json({ success: true, data });
+    } catch (err) { next(err); }
+};
+
 module.exports = {
+    getTechnicians,
     getServices,
     getServiceById,
     createService,

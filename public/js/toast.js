@@ -5,6 +5,8 @@ const Toast = {
         if (!this.container) {
             this.container = document.createElement('div');
             this.container.className = 'toast-container';
+            this.container.setAttribute('aria-live', 'polite');
+            this.container.setAttribute('aria-atomic', 'false');
             document.body.appendChild(this.container);
         }
     },
@@ -13,30 +15,21 @@ const Toast = {
         this.init();
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        
+
         const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-        toast.innerHTML = `<span>${icon}</span> <span>${this.escapeHTML(message)}</span>`;
+        toast.innerHTML = `<span>${icon}</span> <span>${escapeHTML(message)}</span>`;
 
         this.container.appendChild(toast);
 
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.3s ease';
+            toast.classList.add('toast-leaving');
             setTimeout(() => toast.remove(), 300);
         }, duration);
     },
 
     success(msg) { this.show(msg, 'success'); },
     error(msg) { this.show(msg, 'error'); },
-    info(msg) { this.show(msg, 'info'); },
-
-    escapeHTML(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
+    info(msg) { this.show(msg, 'info'); }
 };
 
 window.Toast = Toast;

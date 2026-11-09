@@ -20,6 +20,7 @@ CREATE TABLE User (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'staff', 'mechanic') DEFAULT 'staff',
+    employee_id INT NULL UNIQUE,
     must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -56,6 +57,8 @@ CREATE TABLE Employee (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+ALTER TABLE User ADD CONSTRAINT fk_user_employee FOREIGN KEY (employee_id) REFERENCES Employee(employee_id) ON DELETE SET NULL;
 
 -- 4. Cars Table
 CREATE TABLE Car (

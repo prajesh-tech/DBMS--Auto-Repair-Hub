@@ -31,6 +31,7 @@ function authHeaders(userOrToken, { mutating = false, csrfToken = CSRF_TOKEN } =
 function mockVerifiedUser(db, user) {
     db.query.mockResolvedValueOnce([[{
         user_id: user.id,
+        employee_id: user.employee_id || null,
         username: user.username,
         role: user.role,
         must_change_password: user.must_change_password ? 1 : 0
@@ -40,7 +41,7 @@ function mockVerifiedUser(db, user) {
 const USERS = {
     admin: { id: 1, username: 'admin', role: 'admin' },
     staff: { id: 2, username: 'staff1', role: 'staff' },
-    mechanic: { id: 3, username: 'tech1', role: 'mechanic' }
+    mechanic: { id: 3, username: 'tech1', role: 'mechanic', employee_id: 1 }
 };
 
 module.exports = {

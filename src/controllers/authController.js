@@ -22,6 +22,7 @@ const AUTH_COOKIE_BASE = {
 function buildUserPayload(user) {
     return {
         id: user.user_id,
+        employee_id: user.employee_id || null,
         username: user.username,
         role: String(user.role || '').toLowerCase(),
         must_change_password: !!user.must_change_password
@@ -43,8 +44,8 @@ const validatePasswordComplexity = (password) => {
     return hasUpper && hasLower && hasDigit && hasSpecial;
 };
 
-async function persistRefreshToken(jti, userId, expiresAt) {
-    await db.query(
+async function persistRefreshToken(jti, userId, expiresAt, connection = db) {
+    await connection.query(
         'INSERT INTO RefreshToken (jti, user_id, expires_at) VALUES (?, ?, ?)',
         [jti, userId, expiresAt]
     );
@@ -57,14 +58,14 @@ async function revokeRefreshToken(jti) {
     );
 }
 
-async function revokeAllUserRefreshTokens(userId) {
-    await db.query(
+async function revokeAllUserRefreshTokens(userId, connection = db) {
+    await connection.query(
         'UPDATE RefreshToken SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND revoked_at IS NULL',
         [userId]
     );
 }
 
-async function issueTokenCookies(res, userRow) {
+async function issueTokenCookies(res, userRow, connection = db) {
     const payload = {
         id: userRow.user_id,
         username: userRow.username,
@@ -76,7 +77,7 @@ async function issueTokenCookies(res, userRow) {
     const refreshToken = jwt.sign({ ...payload, jti }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    await persistRefreshToken(jti, userRow.user_id, expiresAt);
+    await persistRefreshToken(jti, userRow.user_id, expiresAt, connection);
 
     res.cookie('access_token', accessToken, { ...AUTH_COOKIE_BASE, maxAge: 15 * 60 * 1000 });
     res.cookie('refresh_token', refreshToken, {
@@ -147,107 +148,65 @@ const login = async (req, res, next) => {
 };
 
 const refreshToken = async (req, res, next) => {
-    try {
-        const token = req.cookies ? req.cookies.refresh_token : null;
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Refresh Token required'
-            });
-        }
-
-        let decoded;
-        try {
-            decoded = jwt.verify(token, JWT_REFRESH_SECRET);
-        } catch (err) {
-            clearAuthCookies(res);
-            return res.status(403).json({
-                success: false,
-                message: 'Invalid or expired Refresh Token'
-            });
-        }
-
-        const jti = decoded.jti;
-        if (!jti) {
-            clearAuthCookies(res);
-            return res.status(403).json({
-                success: false,
-                message: 'Invalid or expired Refresh Token'
-            });
-        }
-
-        const [rows] = await db.query(
-            'SELECT jti, user_id, expires_at, revoked_at FROM RefreshToken WHERE jti = ?',
-            [jti]
-        );
-
-        if (!rows || rows.length === 0) {
-            clearAuthCookies(res);
-            return res.status(403).json({
-                success: false,
-                message: 'Invalid or expired Refresh Token'
-            });
-        }
-
-        const stored = rows[0];
-        if (stored.revoked_at) {
-            await revokeAllUserRefreshTokens(stored.user_id);
-            clearAuthCookies(res);
-            return res.status(403).json({
-                success: false,
-                message: 'Refresh token reuse detected. All sessions revoked.'
-            });
-        }
-
-        if (new Date(stored.expires_at).getTime() < Date.now()) {
-            await revokeRefreshToken(jti);
-            clearAuthCookies(res);
-            return res.status(403).json({
-                success: false,
-                message: 'Invalid or expired Refresh Token'
-            });
-        }
-
-        await revokeRefreshToken(jti);
-
-        const [users] = await db.query(
-            'SELECT user_id, username, role, must_change_password FROM User WHERE user_id = ?',
-            [stored.user_id]
-        );
-        if (!users || users.length === 0) {
-            await revokeAllUserRefreshTokens(stored.user_id);
-            clearAuthCookies(res);
-            return res.status(401).json({
-                success: false,
-                message: 'User no longer exists'
-            });
-        }
-
-        const userPayload = await issueTokenCookies(res, users[0]);
-        res.json({
-            success: true,
-            message: 'Token refreshed successfully',
-            user: userPayload
-        });
-    } catch (err) {
-        next(err);
+  const token = req.cookies && req.cookies.refresh_token;
+  if (!token) return res.status(401).json({ success: false, message: 'Refresh Token required' });
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+  } catch (err) {
+    clearAuthCookies(res);
+    return res.status(403).json({ success: false, message: 'Invalid or expired Refresh Token' });
+  }
+  if (!decoded.jti) return res.status(403).json({ success: false, message: 'Invalid refresh token' });
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    // Lock the user first so rotations and replay revocations for all sessions serialize.
+    const [users] = await connection.query(
+      'SELECT user_id, username, role, must_change_password, employee_id FROM User WHERE user_id = ? FOR UPDATE', [decoded.id]
+    );
+    const [rows] = await connection.query(
+      'SELECT jti, user_id, expires_at, revoked_at FROM RefreshToken WHERE jti = ? FOR UPDATE', [decoded.jti]
+    );
+    const stored = rows[0];
+    if (!users.length || !stored || stored.user_id !== decoded.id) {
+      await connection.rollback();
+      clearAuthCookies(res);
+      return res.status(401).json({ success: false, message: 'Invalid refresh session' });
     }
+    if (stored.revoked_at) {
+      await connection.query('UPDATE RefreshToken SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND revoked_at IS NULL', [stored.user_id]);
+      await connection.commit();
+      clearAuthCookies(res);
+      return res.status(403).json({ success: false, message: 'Refresh token reuse detected. All sessions revoked.' });
+    }
+    if (new Date(stored.expires_at).getTime() <= Date.now()) {
+      await connection.rollback();
+      clearAuthCookies(res);
+      return res.status(403).json({ success: false, message: 'Expired refresh token' });
+    }
+    await connection.query('UPDATE RefreshToken SET revoked_at = CURRENT_TIMESTAMP WHERE jti = ? AND revoked_at IS NULL', [decoded.jti]);
+    const user = await issueTokenCookies(res, users[0], connection);
+    await connection.commit();
+    res.json({ success: true, message: 'Token refreshed successfully', user });
+  } catch (err) {
+    if (connection) await connection.rollback();
+    clearAuthCookies(res);
+    next(err);
+  } finally {
+    if (connection) connection.release();
+  }
 };
 
 const logout = async (req, res, next) => {
     try {
         const token = req.cookies ? req.cookies.refresh_token : null;
+        let decoded;
         if (token) {
-            try {
-                const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
-                if (decoded.jti) {
-                    await revokeRefreshToken(decoded.jti);
-                }
-            } catch (err) {
-                // Cookie clear still proceeds
-            }
+            try { decoded = jwt.verify(token, JWT_REFRESH_SECRET); } catch (err) { /* Invalid cookies can still be cleared. */ }
         }
+        if (decoded && decoded.jti) await revokeRefreshToken(decoded.jti);
         clearAuthCookies(res);
         res.json({ success: true, message: 'Logged out successfully' });
     } catch (err) {
@@ -311,11 +270,16 @@ const register = async (req, res, next) => {
             });
         }
 
+        const employeeId = req.body.employee_id || null;
+        if (employeeId) {
+            const [employees] = await db.query('SELECT employee_id FROM Employee WHERE employee_id = ? AND is_deleted = FALSE', [employeeId]);
+            if (!employees.length) return res.status(400).json({ success: false, message: 'Employee does not exist' });
+        }
         const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         const [result] = await db.query(
-            'INSERT INTO User (username, password_hash, role, must_change_password) VALUES (?, ?, ?, TRUE)',
-            [trimmedUsername, hashedPassword, assignedRole]
+            'INSERT INTO User (username, password_hash, role, must_change_password, employee_id) VALUES (?, ?, ?, TRUE, ?)',
+            [trimmedUsername, hashedPassword, assignedRole, employeeId]
         );
 
         res.status(201).json({
@@ -330,72 +294,57 @@ const register = async (req, res, next) => {
             }
         });
     } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ success: false, message: 'Username or employee already linked' });
         next(err);
     }
 };
 
 const changePassword = async (req, res, next) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Current password and new password are required'
-            });
-        }
-
-        if (passwordByteLength(newPassword) > 72) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password must be at most 72 bytes'
-            });
-        }
-
-        if (!validatePasswordComplexity(newPassword)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character'
-            });
-        }
-
-        const [users] = await db.query('SELECT * FROM User WHERE user_id = ?', [req.user.id]);
-        if (!users || users.length === 0) {
-            return res.status(401).json({
-                success: false,
-                message: 'User no longer exists'
-            });
-        }
-
-        const user = users[0];
-        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
-        if (!isMatch) {
-            return res.status(401).json({
-                success: false,
-                message: 'Current password is incorrect'
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-        await db.query(
-            'UPDATE User SET password_hash = ?, must_change_password = FALSE WHERE user_id = ?',
-            [hashedPassword, user.user_id]
-        );
-        invalidateUserCache(user.user_id);
-
-        res.json({
-            success: true,
-            message: 'Password changed successfully',
-            user: {
-                id: user.user_id,
-                username: user.username,
-                role: String(user.role).toLowerCase(),
-                must_change_password: false
-            }
-        });
-    } catch (err) {
-        next(err);
+  let connection;
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!validatePasswordComplexity(newPassword)) {
+      return res.status(400).json({ success: false, message: 'New password must meet complexity requirements and be at most 72 bytes' });
     }
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [users] = await connection.query('SELECT * FROM User WHERE user_id = ? FOR UPDATE', [req.user.id]);
+    if (!users.length || !(await bcrypt.compare(currentPassword, users[0].password_hash))) {
+      await connection.rollback();
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+    const user = users[0];
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await connection.query('UPDATE User SET password_hash = ?, must_change_password = FALSE WHERE user_id = ?', [passwordHash, user.user_id]);
+    await revokeAllUserRefreshTokens(user.user_id, connection);
+    const payload = await issueTokenCookies(res, { ...user, must_change_password: false }, connection);
+    await connection.commit();
+    invalidateUserCache(user.user_id);
+    res.json({ success: true, message: 'Password changed successfully', user: payload });
+  } catch (err) {
+    if (connection) await connection.rollback();
+    clearAuthCookies(res);
+    next(err);
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
+const linkEmployee = async (req, res, next) => {
+  try {
+    const employeeId = req.body.employee_id;
+    if (employeeId !== null) {
+      const [employees] = await db.query('SELECT employee_id FROM Employee WHERE employee_id = ? AND is_deleted = FALSE', [employeeId]);
+      if (!employees.length) return res.status(400).json({ success: false, message: 'Employee does not exist' });
+    }
+    const [result] = await db.query('UPDATE User SET employee_id = ? WHERE user_id = ?', [employeeId, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ success: false, message: 'User not found' });
+    invalidateUserCache(req.params.id);
+    res.json({ success: true, message: 'Employee link updated' });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ success: false, message: 'Employee is already linked' });
+    next(err);
+  }
 };
 
 const getMe = async (req, res, next) => {
@@ -416,6 +365,7 @@ module.exports = {
     register,
     changePassword,
     getMe,
+    linkEmployee,
     ALLOWED_ROLES,
     validatePasswordComplexity
 };

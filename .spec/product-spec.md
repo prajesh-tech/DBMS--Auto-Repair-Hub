@@ -6,7 +6,7 @@
 ## 2. Target Personas & Role Access
 - **Admin**: Full oversight of shop operations, revenue analytics, salary metrics, inventory management, user registration, and deletion permissions.
 - **Staff / Service Advisor**: Manages customer intake, schedules vehicle repair jobs, assigns mechanics, manages inventory, and generates PDF invoices (Restricted from employee salary data and user deletion).
-- **Mechanic**: Updates repair job status (Pending -> In Progress -> Completed), logs diagnostic descriptions, and views assigned work orders (Restricted from financial reporting, salary data, and management pages).
+- **Mechanic**: Updates repair job status (Pending -> In Progress -> Completed), logs diagnostic descriptions, and views only work orders assigned to the linked active employee (Restricted from financial reporting, salary data, and management pages).
 
 ## 3. Core Capabilities
 - **Customer Management**: Maintain customer contact records.

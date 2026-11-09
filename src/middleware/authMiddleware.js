@@ -2,47 +2,31 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const { JWT_SECRET } = require('../config/env');
 
-const USER_CACHE_TTL_MS = 30 * 1000;
-/** @type {Map<number, { user: object, expiresAt: number }>} */
-const userCache = new Map();
-
-function invalidateUserCache(userId) {
-    if (userId !== undefined && userId !== null) {
-        userCache.delete(Number(userId));
-    }
-}
-
-function clearUserCache() {
-    userCache.clear();
-}
+// Compatibility hooks for callers/tests; users are reloaded on every request.
+function invalidateUserCache() {}
+function clearUserCache() {}
 
 async function loadUserById(userId) {
     const id = Number(userId);
     if (!Number.isInteger(id) || id < 1) return null;
 
-    const cached = userCache.get(id);
-    const now = Date.now();
-    if (cached && cached.expiresAt > now) {
-        return cached.user;
-    }
-
     const [rows] = await db.query(
-        'SELECT user_id, username, role, must_change_password FROM User WHERE user_id = ?',
+        'SELECT user_id, username, role, must_change_password, employee_id FROM User WHERE user_id = ?',
         [id]
     );
     if (!rows || rows.length === 0) {
-        userCache.delete(id);
         return null;
     }
 
     const row = rows[0];
     const user = {
         id: row.user_id,
+        employee_id: row.employee_id || null,
         username: row.username,
         role: String(row.role || '').toLowerCase(),
         must_change_password: !!row.must_change_password
     };
-    userCache.set(id, { user, expiresAt: now + USER_CACHE_TTL_MS });
+
     return user;
 }
 
@@ -76,6 +60,10 @@ const verifyToken = async (req, res, next) => {
             });
         }
 
+        const allowedDuringPasswordChange = ['/api/auth/me', '/api/auth/change-password', '/api/auth/logout', '/api/auth/refresh'];
+        if (user.must_change_password && !allowedDuringPasswordChange.includes(req.originalUrl.split('?')[0])) {
+            return res.status(403).json({ success: false, message: 'Password change required', code: 'PASSWORD_CHANGE_REQUIRED' });
+        }
         req.user = user;
         next();
     } catch (err) {

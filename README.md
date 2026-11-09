@@ -8,7 +8,7 @@ A full-stack, secure, modular web application engineered for managing auto repai
 
 The application features a complete redesign aligning with the **Fidelity Modern** design system specifications (`design.md`) and the official brand emblem logo:
 
-- **Brand Emblem Integration**: Centered brand emblem badge (`public/images/logo.png`) featuring the iconic mechanic gear silhouette, crossed wrenches, and glowing cap star integrated into the top-left header navigation and login splash screen.
+- **Brand Emblem Integration**: Centered brand emblem badge (`public/images/logo.webp`) featuring the iconic mechanic gear silhouette, crossed wrenches, and glowing cap star integrated into the top-left header navigation and login splash screen.
 - **Color Palette & Visual Tokens**:
   - **Surfaces**: Clean, high-legibility surfaces (`#fcf8f8`, `#ffffff`, `#f1edec`) and deep dark mode graphite surfaces (`#0d1117`, `#141a24`, `#1e2837`).
   - **Primary & Secondary**: Tech cobalt blue (`#0050d7` / `#2b69fa` / `#3b82f6`) for high-impact interactive controls, buttons, and navigation highlights.
@@ -23,10 +23,10 @@ The application features a complete redesign aligning with the **Fidelity Modern
 - **Backend**: Node.js, Express.js (MVC Architecture)
 - **Database**: MariaDB / MySQL (`mysql2/promise` connection pool with transactions)
 - **Authentication**: Dual-Token JWT (15m Access + 7d Refresh in `HttpOnly`, `SameSite=Strict` cookies), server-side refresh revocation, double-submit CSRF, & `bcryptjs` (cost 12)
-- **Frontend**: Modern Vanilla HTML5, Fidelity Modern Glassmorphism CSS (Google Inter font), JavaScript (Async/Fetch)
-- **Analytics**: Chart.js Interactive Timeframe Visualizations matching the Fidelity Modern palette
+- **Frontend**: Modern Vanilla HTML5, Fidelity Modern Glassmorphism CSS (self-hosted Inter font), JavaScript (Async/Fetch)
+- **Analytics**: Self-hosted Chart.js 4.4.8 interactive Timeframe Visualizations matching the Fidelity Modern palette
 - **PDF Generation**: PDFKit
-- **Testing**: Jest, Supertest (39/39 tests passing across 7 test suites covering auth, RBAC, input validation, and business logic)
+- **Testing**: Jest and Supertest covering authentication, RBAC, CSRF, refresh rotation, input validation, and business logic
 
 ---
 
@@ -36,7 +36,7 @@ The application features a complete redesign aligning with the **Fidelity Modern
 - **👥 Multi-Role User Access Control**: Granular UI rendering and backend authorization paths tailored for `Admin`, `Staff`, and `Mechanic` profiles.
 - **📦 Automated Inventory Deduction & Restoration**: MySQL transactions automatically decrement stock when parts are assigned to a service job, block zero-stock assignments, and restore inventory upon job deletion or part unlinking.
 - **📊 Standalone Financial Analytics**: Dedicated **📊 Analytics** module (`analytics.html`) with timeframe filters (`Today`, `This Week`, `This Month`, `This Year`, `All Time`), Parts vs. Labor revenue breakdown, and Chart.js trend curves.
-- **📱 Responsive Navigation & Mobile Drawer**: Sticky top navigation bar across all pages with brand logo, `.hamburger-btn` toggle for mobile viewports, dark/light theme switching, and live user role badge.
+- **📱 Responsive Navigation & Mobile Drawer**: Sticky top navigation bar across all pages with brand logo, shared mobile navigation toggle for mobile viewports, dark/light theme switching, and live user role badge.
 - **⏱️ Automatic Idle Session Timeout**: 30-minute user inactivity tracker with a 2-minute countdown warning modal.
 - **📄 Automated PDF Invoicing**: Streamed PDF invoices formatted with customer details, vehicle VINs, technician notes, and itemized material costs (`.btn-sm` action buttons).
 
@@ -47,15 +47,16 @@ The application features a complete redesign aligning with the **Fidelity Modern
 ```text
 Auto_Repair_Hub/
 ├── database/
-│   └── schema.sql              # Database creation & seed data migration script
+│   └── schema.sql              # Destructive local demo setup; use migrate.js for upgrades
 ├── public/                     # Static frontend web assets
 │   ├── css/
 │   │   └── style.css           # Fidelity Modern design system (Inter, tokens, dark mode)
 │   ├── images/
-│   │   ├── logo.png            # Transparent brand emblem logo
-│   │   └── logo-raw.jpg        # High-res raw emblem badge
+│   │   └── logo.webp           # 10 KB navigation emblem
 │   ├── js/
-│   │   ├── api.js              # Centralized API fetch wrapper, mobile drawer & theme toggle
+│   │   ├── api.js              # Cookie/CSRF API wrapper with shared refresh operation
+│   │   ├── common.js           # Shared escaping, dialog focus and list states
+│   │   ├── layout.js           # Shared role-aware navigation and header
 │   │   ├── idle.js             # 30-minute inactivity tracker & warning modal countdown
 │   │   ├── modal.js            # Custom modal dialog helper
 │   │   └── toast.js            # Toast notification helper
@@ -94,7 +95,7 @@ Auto_Repair_Hub/
 │   │   ├── partRoutes.js
 │   │   └── dashboardRoutes.js
 │   └── server.js               # Express application entry point (cookie-parser, CORS, Helmet)
-├── tests/                      # Jest test suite (39/39 passing)
+├── tests/                      # Jest and Supertest regression suites
 │   ├── database.test.js
 │   ├── auth.test.js
 │   ├── customer.test.js
@@ -120,7 +121,7 @@ Auto_Repair_Hub/
 ### 2. Environment Setup
 Copy `.env.example` to `.env` and fill in real values (JWT secrets, DB credentials, `SEED_PASSWORD`, `ALLOWED_ORIGINS`, `COOKIE_SECURE`, `TRUST_PROXY`). There are no default JWT secrets or `root`/`root` DB credentials outside test mode.
 
-### 3. Database Migration Setup
+### 3. Fresh local demo setup (resets configured database)
 With MariaDB/MySQL running and `.env` configured (including `SEED_PASSWORD`):
 
 ```bash
@@ -129,8 +130,9 @@ npm run seed
 
 This applies `database/schema.sql` and creates `admin`, `staff`, and `mechanic` users. The seed password is never printed; those users must change password on first login (`must_change_password`).
 
-### 4. Start the Application
+### 4. Build CSS and start the application
 ```bash
+npm run build
 npm start
 ```
 
@@ -150,3 +152,39 @@ npm test
 
 ## 📄 License
 ISC License © Auto Repair Hub Team
+
+### Existing database upgrades
+Run `npm run migrate` against the configured database before starting an upgraded server.
+This preserves shop records; `npm run seed` resets the local demo database and must not be used for upgrades.
+Cookies default to Secure; set `COOKIE_SECURE=false` only for local HTTP development.
+Required password changes are enforced by the API, not just the login UI. Refresh rotation uses row locks and transactions; logout revocation errors are reported as generic server errors.
+
+Admins can link existing accounts using `PUT /api/auth/users/:id/employee` with an `employee_id` (or null to unlink), through a cookie-authenticated, CSRF-protected request. Registration also accepts this optional field. Mechanics without a link cannot access jobs; linked mechanics only read assigned jobs and edit status/notes.
+
+
+### Seeded accounts and initial passwords
+
+| Username | Role | Initial password |
+| --- | --- | --- |
+| `admin` | Admin | The `SEED_PASSWORD` chosen in your local `.env` |
+| `staff` | Staff | The `SEED_PASSWORD` chosen in your local `.env` |
+| `mechanic` | Mechanic | The `SEED_PASSWORD` chosen in your local `.env` |
+
+There are no built-in default passwords. Numeric user IDs are assigned by the database and may differ between installations. All three seeded accounts must replace the initial password on first login. After that, each account uses its own chosen password. To replace unknown development credentials, choose a new local `SEED_PASSWORD` and seed only if resetting the demo database is intended. Never put actual credentials in this README.
+
+### Frontend assets and security
+
+Run `npm ci` and `npm run build` after checkout or template/class changes. Tailwind CSS 3.4.17 runs only at build time; generated `public/css/tailwind.css` is committed. Inter, the required Material Symbols subset, and Chart.js 4.4.8 are served locally with license notices in `public/fonts/` and `public/vendor/`. Pages use external scripts/styles and a self-only Content-Security-Policy. Images and fonts cache for one day with validators; HTML, CSS, and JavaScript revalidate on each request.
+
+The shared page guard resolves the server profile before showing protected content. Mechanics use assigned service jobs only; staff may fetch a salary-free technician list through `/api/services/technicians`. Account links are never taken from token claims or request bodies for authorization.
+
+First-login password changes use a Fidelity Modern popup with Inter typography, theme-aware surfaces, cobalt actions, password requirements, inline errors, and a compact mobile layout. Keyboard focus starts in the current-password field; closing the required-change dialog logs out.
+
+### Verification
+
+`npm test` uses mocked database calls. For additional real database checks, run `RUN_LOCAL_DB_TESTS=1 node scripts/verify-local-database.js` with loopback database credentials able to create a database. This creates a randomly named disposable test database, verifies migration preservation/idempotence and concurrent refresh rotation/replay, and removes only that test database. It never resets the configured application database.
+
+Browser checks at 360px, 768px, and 1280px, keyboard interaction, and browser-console CSP violations remain unverified in this environment; no browser dependency was added. See `SECURITY_REMEDIATION.md` for the issue checklist and verification evidence.
+
+
+The shared blue/green ambient background fills the viewport on every page. Desktop navigation collapses to an icon/logo rail and expands on hover or keyboard focus; mobile retains the drawer and bottom navigation. Active page labels use solid cobalt backgrounds and white text. Table actions, theme controls, and logout use the Fidelity Modern button styles. Each password-change field has an independent, labelled show/hide control.

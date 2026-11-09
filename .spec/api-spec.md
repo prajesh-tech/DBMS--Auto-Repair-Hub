@@ -33,3 +33,11 @@
 
 ## 5. Financial Analytics APIs
 - **`GET /api/dashboard/stats?timeframe=all|today|week|month|year`**: Fetch financial statistics, Parts vs. Labor revenue breakdown, average invoice metrics, and Chart.js trend time series.
+
+## Employee account links and mechanic access
+`PUT /api/auth/users/:id/employee` is admin-only; body `{ "employee_id": 1 }` links an active employee, or `null` unlinks. Registration optionally accepts `employee_id`. Duplicate links return 409, missing employees 400, and missing users 404.
+Mechanics require a link and may only list/read assigned service jobs and update status/description. Job responses omit customer contacts and financial fields; inaccessible jobs return 404. Customers, cars, parts, analytics, invoices, and inventory mutations require admin/staff.
+
+`GET /api/services/technicians` is admin/staff-only and returns active `employee_id`, `name`, and `role` choices without salary fields. `GET /api/health` requires an authenticated admin/staff user.
+Business APIs return 403 with `code: PASSWORD_CHANGE_REQUIRED` until required password changes complete. Profile, password change, refresh, and logout remain available.
+List query validation rejects invalid pagination, filter statuses, timeframe values, and custom sort parameters. Service statuses match the database: Pending, In Progress, Completed.

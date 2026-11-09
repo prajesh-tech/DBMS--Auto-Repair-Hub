@@ -1,7 +1,7 @@
 const path = require('path');
 
 const errorHandler = (err, req, res, next) => {
-    const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+    const statusCode = Number.isInteger(err.status) && err.status >= 400 && err.status <= 599 ? err.status : (res.statusCode >= 400 ? res.statusCode : 500);
 
     console.error('[SERVER ERROR]:', err.stack || err.message || err);
 
@@ -24,7 +24,7 @@ const notFound = (req, res, next) => {
     }
     res.status(404).json({
         success: false,
-        message: `Endpoint Not Found - [${req.method}] ${req.originalUrl}`
+        message: `Endpoint Not Found - [${req.method}] ${req.path}`
     });
 };
 

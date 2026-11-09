@@ -18,6 +18,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const partRoutes = require('./routes/partRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 
+const { verifyToken, requireRole } = require('./middleware/authMiddleware');
 const app = express();
 
 if (TRUST_PROXY) {
@@ -25,7 +26,15 @@ if (TRUST_PROXY) {
 }
 
 app.use(helmet({
-    contentSecurityPolicy: false
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'"], scriptSrc: ["'self'"], scriptSrcAttr: ["'none'"],
+        styleSrc: ["'self'"], styleSrcAttr: ["'none'"], fontSrc: ["'self'"],
+        imgSrc: ["'self'"], connectSrc: ["'self'"], objectSrc: ["'none'"],
+        baseUri: ["'self'"], formAction: ["'self'"], frameAncestors: ["'none'"]
+      }
+    }
 }));
 
 const allowedOriginsList = ALLOWED_ORIGINS
@@ -39,20 +48,29 @@ const corsOptions = {
         if (allowedOriginsList.includes(origin)) {
             return callback(null, true);
         }
-        return callback(new Error('Blocked by CORS policy: Origin not allowed'));
+        return callback(Object.assign(new Error('Origin not allowed'), { status: 403 }));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 };
 
-app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+  if (origin && origin === `${req.protocol}://${req.get('host')}`) return next();
+  cors(corsOptions)(req, res, next);
+});
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(ensureAndValidateCsrf);
 
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  maxAge: '1d',
+  setHeaders: (res, file) => {
+    if (/\.(html|css|js)$/.test(file)) res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 const loginRateLimiter = rateLimit({
     windowMs: 60 * 1000,
@@ -90,6 +108,7 @@ app.use('/api', apiRateLimiter);
 app.use('/api/auth/login', loginRateLimiter);
 app.use('/api/auth/refresh', refreshRateLimiter);
 app.use('/api/auth/register', registerRateLimiter);
+app.use('/api/auth/change-password', registerRateLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -98,16 +117,9 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/parts', partRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', verifyToken, requireRole(['admin', 'staff']), (req, res) => {
     res.json({ status: 'OK', message: 'Auto Repair Hub API Server Running', timestamp: new Date() });
 });
-
-// Legacy redirects retained until Phase 2 removal
-app.use('/addCustomer', (req, res) => res.redirect(307, '/api/customers'));
-app.use('/getCustomers', (req, res) => res.redirect(307, '/api/customers'));
-app.use('/getEmployees', (req, res) => res.redirect(307, '/api/employees'));
-app.use('/getCars', (req, res) => res.redirect(307, '/api/cars'));
-app.use('/getServices', (req, res) => res.redirect(307, '/api/services'));
 
 app.use(notFound);
 app.use(errorHandler);

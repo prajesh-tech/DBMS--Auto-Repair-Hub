@@ -23,6 +23,13 @@ describe('Authentication & Security API Tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         clearUserCache();
+        db.getConnection.mockResolvedValue({
+            query: db.query,
+            beginTransaction: jest.fn().mockResolvedValue(),
+            commit: jest.fn().mockResolvedValue(),
+            rollback: jest.fn().mockResolvedValue(),
+            release: jest.fn()
+        });
     });
 
     afterAll(async () => {
@@ -220,6 +227,7 @@ describe('Authentication & Security API Tests', () => {
             );
 
             db.query
+                .mockResolvedValueOnce([[user]])
                 .mockResolvedValueOnce([[{
                     jti,
                     user_id: 1,
@@ -227,7 +235,6 @@ describe('Authentication & Security API Tests', () => {
                     revoked_at: null
                 }]])
                 .mockResolvedValueOnce([{ affectedRows: 1 }])
-                .mockResolvedValueOnce([[user]])
                 .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
             const res = await request(app)
@@ -240,6 +247,7 @@ describe('Authentication & Security API Tests', () => {
             expect(res.body.user.role).toBe('admin');
 
             db.query
+                .mockResolvedValueOnce([[user]])
                 .mockResolvedValueOnce([[{
                     jti,
                     user_id: 1,
@@ -326,6 +334,8 @@ describe('Authentication & Security API Tests', () => {
                     role: 'admin',
                     must_change_password: 1
                 }]])
+                .mockResolvedValueOnce([{ affectedRows: 1 }])
+                .mockResolvedValueOnce([{ affectedRows: 1 }])
                 .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
             const res = await request(app)
@@ -340,4 +350,23 @@ describe('Authentication & Security API Tests', () => {
             expect(res.body.user.must_change_password).toBe(false);
         });
     });
+    it('blocks protected APIs until a required password change completes', async () => {
+        mockVerifiedUser(db, { ...USERS.admin, must_change_password: true });
+        const res = await request(app).get('/api/customers').set(authHeaders(USERS.admin));
+        expect(res.status).toBe(403);
+        expect(res.body.code).toBe('PASSWORD_CHANGE_REQUIRED');
+    });
+
+    it('propagates logout revocation failures without exposing database details', async () => {
+        const refresh = jwt.sign({ id: 1, jti: crypto.randomUUID() }, JWT_REFRESH_SECRET);
+        db.query.mockRejectedValueOnce(new Error('private SQL details'));
+        const log = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const res = await request(app).post('/api/auth/logout')
+            .set('Cookie', `refresh_token=${refresh}; csrf_token=${CSRF_TOKEN}`)
+            .set('X-CSRF-Token', CSRF_TOKEN);
+        expect(res.status).toBe(500);
+        expect(res.body.message).toBe('Internal Server Error');
+        log.mockRestore();
+    });
+
 });

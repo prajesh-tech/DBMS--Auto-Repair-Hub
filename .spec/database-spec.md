@@ -34,3 +34,5 @@ The database uses InnoDB engine with full Foreign Key enforcement (`ON DELETE CA
 - `idx_service_status`: `ServiceJob(status)`
 - `idx_refresh_user`: `RefreshToken(user_id)`
 - `idx_refresh_expires`: `RefreshToken(expires_at)`
+
+`User.employee_id` is nullable and unique, references Employee with ON DELETE SET NULL. Existing installations use `npm run migrate`; it preserves data and leaves existing users unlinked. Demo seed links the mechanic to Alex Rivera.

@@ -1,0 +1,23 @@
+
+        @layer base {
+            html, body { margin: 0; padding: 0; }
+            body { overscroll-behavior: none; }
+            main > :first-child { margin-top: 0 !important; }
+            main > :last-child { margin-bottom: 0 !important; }
+        }
+        ::-webkit-scrollbar { display: none; }
+
+.extracted-style-1 { width: 75%; }
+.extracted-style-2 { width: 90%; }
+.extracted-style-3 { width: 45%; }
+.extracted-style-4 { width: 100%; }
+.extracted-style-5 { width: 84%; }
+.extracted-style-6 { width: 62%; }
+.extracted-style-7 { width: 91%; }
+.extracted-style-8 { width: 88% }
+.extracted-style-9 { margin-bottom:12px; }
+.extracted-style-10 { width: 65%; }
+.extracted-style-11 { width: 30%; }
+.extracted-style-12 { width: 92%; }
+.extracted-style-13 { width: 78%; }
+.extracted-style-14 { width: 64%; }

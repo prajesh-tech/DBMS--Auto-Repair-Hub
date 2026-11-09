@@ -12,6 +12,7 @@ async function seedDatabase() {
         process.exit(1);
     }
 
+    if (Buffer.byteLength(seedPassword, 'utf8') > 72 || seedPassword.length < 8 || !/[A-Z]/.test(seedPassword) || !/[a-z]/.test(seedPassword) || !/[0-9]/.test(seedPassword) || !/[^a-zA-Z0-9\s]/.test(seedPassword)) throw new Error('SEED_PASSWORD must meet password requirements');
     console.log('Connecting to database server...');
     let connection;
     try {
@@ -43,6 +44,7 @@ async function seedDatabase() {
             );
         }
 
+        await connection.query("UPDATE User SET employee_id = (SELECT employee_id FROM Employee WHERE name = ? LIMIT 1) WHERE username = ?", ['Alex Rivera', 'mechanic']);
         console.log('Database schema and seed data loaded successfully.');
         console.log('Seeded users: admin, staff, mechanic (must change password on first login).');
         console.log('Password was taken from SEED_PASSWORD and is not printed.');

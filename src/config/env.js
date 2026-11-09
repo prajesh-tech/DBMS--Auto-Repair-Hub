@@ -17,20 +17,20 @@ if (!isTest) {
     }
 }
 
-const JWT_SECRET = isTest
-    ? (process.env.JWT_SECRET || 'test_jwt_secret_auto_repair_hub_do_not_use_elsewhere')
-    : process.env.JWT_SECRET;
-
-const JWT_REFRESH_SECRET = isTest
-    ? (process.env.JWT_REFRESH_SECRET || 'test_jwt_refresh_secret_auto_repair_hub_do_not_use_elsewhere')
-    : process.env.JWT_REFRESH_SECRET;
-
-function parseBool(value, defaultValue = false) {
-    if (value === undefined || value === null || value === '') return defaultValue;
-    return String(value).toLowerCase() === 'true' || value === '1';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be configured, including in Jest setup');
 }
 
-const COOKIE_SECURE = parseBool(process.env.COOKIE_SECURE, isProduction);
+function parseBool(value, defaultValue) {
+  if (value === undefined || value === '') return defaultValue;
+  if (value === 'true' || value === '1') return true;
+  if (value === 'false' || value === '0') return false;
+  throw new Error('Boolean environment flags must be true, false, 1, or 0');
+}
+
+const COOKIE_SECURE = parseBool(process.env.COOKIE_SECURE, true);
 const TRUST_PROXY = parseBool(process.env.TRUST_PROXY, false);
 
 let DB_USER;

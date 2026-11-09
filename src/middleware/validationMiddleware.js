@@ -183,8 +183,8 @@ const validateCreateServiceJob = [
         .isFloat({ min: 0 }).withMessage('Total cost must be a non-negative number'),
     body('status')
         .optional()
-        .isIn(['Pending', 'In Progress', 'Completed', 'Cancelled'])
-        .withMessage('Status must be one of: Pending, In Progress, Completed, Cancelled'),
+        .isIn(['Pending', 'In Progress', 'Completed'])
+        .withMessage('Status must be one of: Pending, In Progress, Completed'),
     validateRequest
 ];
 
@@ -207,8 +207,8 @@ const validateUpdateServiceJob = [
         .isFloat({ min: 0 }).withMessage('Total cost must be a non-negative number'),
     body('status')
         .optional()
-        .isIn(['Pending', 'In Progress', 'Completed', 'Cancelled'])
-        .withMessage('Status must be one of: Pending, In Progress, Completed, Cancelled'),
+        .isIn(['Pending', 'In Progress', 'Completed'])
+        .withMessage('Status must be one of: Pending, In Progress, Completed'),
     validateRequest
 ];
 
@@ -264,20 +264,26 @@ const validateUpdateEmployee = [
 // Auth Validation Rules
 const validateLogin = [
     body('username')
+        .isString().bail()
         .trim()
         .notEmpty().withMessage('Username is required'),
     body('password')
-        .notEmpty().withMessage('Password is required'),
+        .isString().bail()
+        .notEmpty().withMessage('Password is required')
+        .custom(value => Buffer.byteLength(value, 'utf8') <= 72).withMessage('Password must be at most 72 bytes'),
     validateRequest
 ];
 
 const validateRegister = [
+    body('employee_id').optional({ nullable: true }).isInt({ min: 1 }),
     body('username')
+        .isString().bail()
         .trim()
         .notEmpty().withMessage('Username is required')
         .isLength({ min: 3, max: 30 }).withMessage('Username must be between 3 and 30 characters')
         .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain alphanumeric characters and underscores'),
     body('password')
+        .isString().bail()
         .notEmpty().withMessage('Password is required')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
         .custom((value) => Buffer.byteLength(String(value), 'utf8') <= 72)
@@ -287,6 +293,7 @@ const validateRegister = [
         .matches(/[0-9]/).withMessage('Password must contain at least one digit')
         .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Password must contain at least one special character'),
     body('role')
+        .isString().bail()
         .notEmpty().withMessage('Role is required')
         .toLowerCase()
         .isIn(['admin', 'staff', 'mechanic'])
@@ -296,8 +303,11 @@ const validateRegister = [
 
 const validateChangePassword = [
     body('currentPassword')
-        .notEmpty().withMessage('Current password is required'),
+        .isString().bail()
+        .notEmpty().withMessage('Current password is required')
+        .custom(value => Buffer.byteLength(value, 'utf8') <= 72).withMessage('Password must be at most 72 bytes'),
     body('newPassword')
+        .isString().bail()
         .notEmpty().withMessage('New password is required')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
         .custom((value) => Buffer.byteLength(String(value), 'utf8') <= 72)
@@ -309,7 +319,25 @@ const validateChangePassword = [
     validateRequest
 ];
 
+const validateEmployeeLink = [
+    param('id').isInt({ min: 1 }),
+    body('employee_id').exists({ checkNull: false }).bail().custom(value => value === null || (Number.isInteger(value) && value > 0)),
+    validateRequest
+];
+const validateList = [
+    query('page').optional().isInt({ min: 1, max: 1000000 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+    query('search').optional().isString().isLength({ max: 200 }),
+    query('status').optional().isIn(['', 'Pending', 'In Progress', 'Completed']),
+    query('lowStock').optional().isIn(['true', 'false']),
+    query('timeframe').optional().isIn(['all', 'today', 'week', 'month', 'year']),
+    query('sort').not().exists().withMessage('Custom sorting is not supported'),
+    validateRequest
+];
+
 module.exports = {
+    validateList,
+    validateEmployeeLink,
     validateRequest,
     validateIdParam,
     validateCreateCustomer,

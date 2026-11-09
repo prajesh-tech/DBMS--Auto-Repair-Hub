@@ -1,11 +1,12 @@
 # API Specification: Auto Repair Hub
 
 ## 1. Authentication APIs
-- **`POST /api/auth/login`**: Authenticate user credentials and set `HttpOnly` dual tokens (`access_token` and `refresh_token`).
-- **`POST /api/auth/refresh`**: Verify `refresh_token` cookie and rotate access & refresh tokens.
-- **`POST /api/auth/logout`**: Clear authentication cookies and terminate session.
-- **`POST /api/auth/register`**: Register new staff/admin user account with bcrypt password hashing.
-- **`GET /api/auth/me`**: Get current logged-in user profile & role.
+- **`POST /api/auth/login`**: Authenticate user credentials; set `HttpOnly` dual tokens (`access_token`, `refresh_token`) and return user JSON (no JWT in body). Requires CSRF header.
+- **`POST /api/auth/refresh`**: Verify `refresh_token` cookie, rotate tokens (revoke old `jti`), reload current role from DB. No JWT in body.
+- **`POST /api/auth/logout`**: Revoke presented refresh `jti` and clear authentication cookies.
+- **`POST /api/auth/register`**: Admin-only. Create user with role `admin|staff|mechanic` and `must_change_password=TRUE`.
+- **`POST /api/auth/change-password`**: Authenticated. Set a new password and clear `must_change_password`.
+- **`GET /api/auth/me`**: Current user profile from cookie + DB lookup (rejects deleted users).
 
 ## 2. Customer APIs
 - **`GET /api/customers?page=1&limit=10&search=term`**: Get paginated customer list with search.

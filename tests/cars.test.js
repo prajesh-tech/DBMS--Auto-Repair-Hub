@@ -1,5 +1,4 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
 
 jest.mock('../src/config/database', () => ({
     query: jest.fn(),
@@ -9,15 +8,12 @@ jest.mock('../src/config/database', () => ({
 
 const db = require('../src/config/database');
 const app = require('../src/server');
-const { JWT_SECRET } = require('../src/config/env');
+const { authHeaders, mockVerifiedUser, clearUserCache, USERS } = require('./helpers');
 
 describe('Car / Vehicle API & RBAC Tests', () => {
-    const adminToken = jwt.sign({ user_id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
-    const staffToken = jwt.sign({ user_id: 2, username: 'staff1', role: 'staff' }, JWT_SECRET, { expiresIn: '1h' });
-    const mechanicToken = jwt.sign({ user_id: 3, username: 'tech1', role: 'mechanic' }, JWT_SECRET, { expiresIn: '1h' });
-
     beforeEach(() => {
         jest.clearAllMocks();
+        clearUserCache();
     });
 
     afterAll(async () => {
@@ -30,13 +26,14 @@ describe('Car / Vehicle API & RBAC Tests', () => {
     });
 
     it('should fetch car list with pagination and search', async () => {
+        mockVerifiedUser(db, USERS.admin);
         db.query
             .mockResolvedValueOnce([[{ car_id: 1, vin: '1HGCR2F83HA000001', manufacturer: 'Honda', model: 'Accord' }]])
             .mockResolvedValueOnce([[{ total: 1 }]]);
 
         const res = await request(app)
             .get('/api/cars?search=Accord')
-            .set('Authorization', `Bearer ${adminToken}`);
+            .set(authHeaders(USERS.admin));
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
@@ -44,9 +41,11 @@ describe('Car / Vehicle API & RBAC Tests', () => {
     });
 
     it('should reject car creation with invalid VIN length (must be 17 chars)', async () => {
+        mockVerifiedUser(db, USERS.admin);
+
         const res = await request(app)
             .post('/api/cars')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
                 vin: 'SHORTVIN',
                 manufacturer: 'Tesla',
@@ -61,9 +60,11 @@ describe('Car / Vehicle API & RBAC Tests', () => {
     });
 
     it('should reject car creation with out-of-bounds year', async () => {
+        mockVerifiedUser(db, USERS.admin);
+
         const res = await request(app)
             .post('/api/cars')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
                 vin: '1HGCR2F83HA000002',
                 manufacturer: 'Tesla',
@@ -77,9 +78,11 @@ describe('Car / Vehicle API & RBAC Tests', () => {
     });
 
     it('should forbid mechanic from registering new cars (RBAC 403)', async () => {
+        mockVerifiedUser(db, USERS.mechanic);
+
         const res = await request(app)
             .post('/api/cars')
-            .set('Authorization', `Bearer ${mechanicToken}`)
+            .set(authHeaders(USERS.mechanic, { mutating: true }))
             .send({
                 vin: '1HGCR2F83HA000003',
                 manufacturer: 'Toyota',
@@ -92,14 +95,15 @@ describe('Car / Vehicle API & RBAC Tests', () => {
     });
 
     it('should allow staff to create car when customer exists', async () => {
+        mockVerifiedUser(db, USERS.staff);
         db.query
-            .mockResolvedValueOnce([[{ customer_id: 1 }]]) // Customer exists check
-            .mockResolvedValueOnce([[]]) // VIN does not exist
-            .mockResolvedValueOnce([{ insertId: 5 }]); // Insert car
+            .mockResolvedValueOnce([[{ customer_id: 1 }]])
+            .mockResolvedValueOnce([[]])
+            .mockResolvedValueOnce([{ insertId: 5 }]);
 
         const res = await request(app)
             .post('/api/cars')
-            .set('Authorization', `Bearer ${staffToken}`)
+            .set(authHeaders(USERS.staff, { mutating: true }))
             .send({
                 vin: '1HGCR2F83HA000004',
                 manufacturer: 'Toyota',

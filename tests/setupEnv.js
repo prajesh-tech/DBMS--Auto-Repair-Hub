@@ -1,0 +1,10 @@
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_jwt_secret_auto_repair_hub_do_not_use_elsewhere';
+process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test_jwt_refresh_secret_auto_repair_hub_do_not_use_elsewhere';
+process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
+process.env.DB_USER = process.env.DB_USER || 'test';
+process.env.DB_PASSWORD = process.env.DB_PASSWORD || 'test';
+process.env.DB_NAME = process.env.DB_NAME || 'auto_repair_hub_test';
+process.env.COOKIE_SECURE = 'false';
+process.env.TRUST_PROXY = 'false';
+process.env.ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || 'http://localhost:3000';

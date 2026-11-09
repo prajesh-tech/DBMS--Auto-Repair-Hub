@@ -1,5 +1,4 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
 
 jest.mock('../src/config/database', () => ({
     query: jest.fn(),
@@ -9,15 +8,12 @@ jest.mock('../src/config/database', () => ({
 
 const db = require('../src/config/database');
 const app = require('../src/server');
-const { JWT_SECRET } = require('../src/config/env');
+const { authHeaders, mockVerifiedUser, clearUserCache, USERS } = require('./helpers');
 
 describe('Customer API & RBAC Tests', () => {
-    const adminToken = jwt.sign({ user_id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
-    const staffToken = jwt.sign({ user_id: 2, username: 'staff1', role: 'staff' }, JWT_SECRET, { expiresIn: '1h' });
-    const mechanicToken = jwt.sign({ user_id: 3, username: 'tech1', role: 'mechanic' }, JWT_SECRET, { expiresIn: '1h' });
-
     beforeEach(() => {
         jest.clearAllMocks();
+        clearUserCache();
     });
 
     afterAll(async () => {
@@ -30,14 +26,15 @@ describe('Customer API & RBAC Tests', () => {
         expect(res.body.success).toBe(false);
     });
 
-    it('should fetch list of customers with valid JWT', async () => {
+    it('should fetch list of customers with valid cookie auth', async () => {
+        mockVerifiedUser(db, USERS.admin);
         db.query
             .mockResolvedValueOnce([[{ customer_id: 1, name: 'John Doe', phone: '555-0192', email: 'john@example.com' }]])
             .mockResolvedValueOnce([[{ total: 1 }]]);
 
         const res = await request(app)
             .get('/api/customers')
-            .set('Authorization', `Bearer ${adminToken}`);
+            .set(authHeaders(USERS.admin));
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
@@ -46,11 +43,13 @@ describe('Customer API & RBAC Tests', () => {
     });
 
     it('should reject customer creation with missing or invalid fields (validation middleware)', async () => {
+        mockVerifiedUser(db, USERS.admin);
+
         const res = await request(app)
             .post('/api/customers')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
-                name: '', // Empty name violates validation
+                name: '',
                 phone: '555-1234',
                 email: 'invalid-email-format'
             });
@@ -61,9 +60,11 @@ describe('Customer API & RBAC Tests', () => {
     });
 
     it('should forbid mechanic from creating a customer (RBAC 403)', async () => {
+        mockVerifiedUser(db, USERS.mechanic);
+
         const res = await request(app)
             .post('/api/customers')
-            .set('Authorization', `Bearer ${mechanicToken}`)
+            .set(authHeaders(USERS.mechanic, { mutating: true }))
             .send({
                 name: 'Jane Smith',
                 phone: '555-4321',
@@ -75,11 +76,12 @@ describe('Customer API & RBAC Tests', () => {
     });
 
     it('should allow staff/admin to create a new customer', async () => {
+        mockVerifiedUser(db, USERS.staff);
         db.query.mockResolvedValueOnce([{ insertId: 10 }]);
 
         const res = await request(app)
             .post('/api/customers')
-            .set('Authorization', `Bearer ${staffToken}`)
+            .set(authHeaders(USERS.staff, { mutating: true }))
             .send({
                 name: 'Jane Smith',
                 phone: '555-4321',

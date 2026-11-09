@@ -1,5 +1,4 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
 
 jest.mock('../src/config/database', () => ({
     query: jest.fn(),
@@ -9,15 +8,12 @@ jest.mock('../src/config/database', () => ({
 
 const db = require('../src/config/database');
 const app = require('../src/server');
-const { JWT_SECRET } = require('../src/config/env');
+const { authHeaders, mockVerifiedUser, clearUserCache, USERS } = require('./helpers');
 
 describe('Employee API & Admin Isolation Tests', () => {
-    const adminToken = jwt.sign({ user_id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
-    const staffToken = jwt.sign({ user_id: 2, username: 'staff1', role: 'staff' }, JWT_SECRET, { expiresIn: '1h' });
-    const mechanicToken = jwt.sign({ user_id: 3, username: 'tech1', role: 'mechanic' }, JWT_SECRET, { expiresIn: '1h' });
-
     beforeEach(() => {
         jest.clearAllMocks();
+        clearUserCache();
     });
 
     afterAll(async () => {
@@ -30,25 +26,29 @@ describe('Employee API & Admin Isolation Tests', () => {
     });
 
     it('should forbid staff and mechanic from accessing employee directory (Admin Only - RBAC 403)', async () => {
+        mockVerifiedUser(db, USERS.staff);
         const resStaff = await request(app)
             .get('/api/employees')
-            .set('Authorization', `Bearer ${staffToken}`);
+            .set(authHeaders(USERS.staff));
         expect(resStaff.statusCode).toBe(403);
 
+        clearUserCache();
+        mockVerifiedUser(db, USERS.mechanic);
         const resMech = await request(app)
             .get('/api/employees')
-            .set('Authorization', `Bearer ${mechanicToken}`);
+            .set(authHeaders(USERS.mechanic));
         expect(resMech.statusCode).toBe(403);
     });
 
     it('should allow admin to view employee directory', async () => {
+        mockVerifiedUser(db, USERS.admin);
         db.query
             .mockResolvedValueOnce([[{ employee_id: 1, name: 'Alice Smith', role: 'Master Technician', phone: '555-0200', salary: 75000 }]])
             .mockResolvedValueOnce([[{ total: 1 }]]);
 
         const res = await request(app)
             .get('/api/employees')
-            .set('Authorization', `Bearer ${adminToken}`);
+            .set(authHeaders(USERS.admin));
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
@@ -56,9 +56,11 @@ describe('Employee API & Admin Isolation Tests', () => {
     });
 
     it('should reject employee creation with negative salary (validation error 400)', async () => {
+        mockVerifiedUser(db, USERS.admin);
+
         const res = await request(app)
             .post('/api/employees')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
                 name: 'Bob Jones',
                 role: 'Junior Mechanic',
@@ -71,11 +73,12 @@ describe('Employee API & Admin Isolation Tests', () => {
     });
 
     it('should allow admin to create an employee with valid data', async () => {
+        mockVerifiedUser(db, USERS.admin);
         db.query.mockResolvedValueOnce([{ insertId: 4 }]);
 
         const res = await request(app)
             .post('/api/employees')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
                 name: 'Charlie Brown',
                 role: 'Diagnostics Specialist',
@@ -88,4 +91,3 @@ describe('Employee API & Admin Isolation Tests', () => {
         expect(res.body.employeeId).toBe(4);
     });
 });
-

@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS ServiceJob;
 DROP TABLE IF EXISTS Car;
 DROP TABLE IF EXISTS Employee;
 DROP TABLE IF EXISTS Customer;
+DROP TABLE IF EXISTS RefreshToken;
 DROP TABLE IF EXISTS User;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -19,7 +20,20 @@ CREATE TABLE User (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'staff', 'mechanic') DEFAULT 'staff',
+    must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 1b. Refresh tokens (revocable, rotated on each refresh)
+CREATE TABLE RefreshToken (
+    jti CHAR(36) PRIMARY KEY,
+    user_id INT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    INDEX idx_refresh_user (user_id),
+    INDEX idx_refresh_expires (expires_at)
 ) ENGINE=InnoDB;
 
 -- 2. Customers Table
@@ -102,12 +116,7 @@ CREATE INDEX idx_service_employee ON ServiceJob(employee_id);
 CREATE INDEX idx_service_status ON ServiceJob(status);
 CREATE INDEX idx_part_number ON Part(part_number);
 
--- Seed Data: System Users (Admin, Staff, Mechanic)
--- Seed Data: Users (Default password for admin, staff, mechanic is 'Admin@123')
-INSERT INTO User (username, password_hash, role) VALUES 
-('admin', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'admin'),
-('staff', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'staff'),
-('mechanic', '$2a$10$P.jrzMfplEDVuAZhtrWEfu4oRh9O5xlJ1TY02psFwzz1bvRREqnDq', 'mechanic');
+-- Seed Data: Users are inserted by database/seed.js using SEED_PASSWORD (must_change_password=TRUE).
 
 -- Seed Data: 10 Customers
 INSERT INTO Customer (name, phone, email) VALUES

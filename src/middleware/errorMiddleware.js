@@ -1,15 +1,20 @@
 const path = require('path');
 
 const errorHandler = (err, req, res, next) => {
+    const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+
     console.error('[SERVER ERROR]:', err.stack || err.message || err);
 
-    // Prevent SQL internal schema disclosure
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    
+    if (statusCode >= 500) {
+        return res.status(statusCode).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+
     res.status(statusCode).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        message: err.message || 'Request failed'
     });
 };
 

@@ -280,15 +280,32 @@ const validateRegister = [
     body('password')
         .notEmpty().withMessage('Password is required')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
+        .custom((value) => Buffer.byteLength(String(value), 'utf8') <= 72)
+        .withMessage('Password must be at most 72 bytes')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
         .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
         .matches(/[0-9]/).withMessage('Password must contain at least one digit')
         .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Password must contain at least one special character'),
     body('role')
-        .optional()
+        .notEmpty().withMessage('Role is required')
         .toLowerCase()
-        .isIn(['admin', 'staff', 'mechanic', 'customer'])
-        .withMessage('Role must be one of: admin, staff, mechanic, customer'),
+        .isIn(['admin', 'staff', 'mechanic'])
+        .withMessage('Role must be one of: admin, staff, mechanic'),
+    validateRequest
+];
+
+const validateChangePassword = [
+    body('currentPassword')
+        .notEmpty().withMessage('Current password is required'),
+    body('newPassword')
+        .notEmpty().withMessage('New password is required')
+        .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
+        .custom((value) => Buffer.byteLength(String(value), 'utf8') <= 72)
+        .withMessage('Password must be at most 72 bytes')
+        .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+        .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+        .matches(/[0-9]/).withMessage('Password must contain at least one digit')
+        .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/).withMessage('Password must contain at least one special character'),
     validateRequest
 ];
 
@@ -307,5 +324,6 @@ module.exports = {
     validateCreateEmployee,
     validateUpdateEmployee,
     validateLogin,
-    validateRegister
+    validateRegister,
+    validateChangePassword
 };

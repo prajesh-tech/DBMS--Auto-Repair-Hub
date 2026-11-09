@@ -6,8 +6,9 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
-const { ALLOWED_ORIGINS, isProduction } = require('./config/env');
+const { ALLOWED_ORIGINS, isProduction, TRUST_PROXY } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const { ensureAndValidateCsrf } = require('./middleware/csrfMiddleware');
 
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
@@ -19,20 +20,22 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
-// Security HTTP Headers Middleware
+if (TRUST_PROXY) {
+    app.set('trust proxy', 1);
+}
+
 app.use(helmet({
-    contentSecurityPolicy: false // Allow static scripts and CSS
+    contentSecurityPolicy: false
 }));
 
-// Allowed origins handling
 const allowedOriginsList = ALLOWED_ORIGINS
-    ? ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    ? ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
     : [];
 
 const corsOptions = {
     origin: (origin, callback) => {
+        // Same-origin / non-browser requests send no Origin header
         if (!origin) return callback(null, true);
-        if (!isProduction) return callback(null, true);
         if (allowedOriginsList.includes(origin)) {
             return callback(null, true);
         }
@@ -40,29 +43,53 @@ const corsOptions = {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 };
 
-// Global Middlewares
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(ensureAndValidateCsrf);
 
-// Serve static frontend files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Rate Limiter for Login Endpoint (Max 5 attempts per minute per IP)
 const loginRateLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
+    windowMs: 60 * 1000,
     max: 5,
     message: { success: false, message: 'Too many login attempts. Please try again in a minute.' },
     standardHeaders: true,
     legacyHeaders: false
 });
 
-// API Routes
+const refreshRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    message: { success: false, message: 'Too many refresh attempts. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const registerRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { success: false, message: 'Too many registration attempts. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const apiRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    message: { success: false, message: 'Too many requests. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+app.use('/api', apiRateLimiter);
 app.use('/api/auth/login', loginRateLimiter);
+app.use('/api/auth/refresh', refreshRateLimiter);
+app.use('/api/auth/register', registerRateLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -71,19 +98,17 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/parts', partRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Auto Repair Hub API Server Running ✅', timestamp: new Date() });
+    res.json({ status: 'OK', message: 'Auto Repair Hub API Server Running', timestamp: new Date() });
 });
 
-// Fallback legacy route handlers for backward compatibility
+// Legacy redirects retained until Phase 2 removal
 app.use('/addCustomer', (req, res) => res.redirect(307, '/api/customers'));
 app.use('/getCustomers', (req, res) => res.redirect(307, '/api/customers'));
 app.use('/getEmployees', (req, res) => res.redirect(307, '/api/employees'));
 app.use('/getCars', (req, res) => res.redirect(307, '/api/cars'));
 app.use('/getServices', (req, res) => res.redirect(307, '/api/services'));
 
-// 404 & Global Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 
@@ -92,7 +117,7 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
         console.log(`=================================`);
-        console.log(`Auto Repair Hub Server Started 🚀`);
+        console.log(`Auto Repair Hub Server Started`);
         console.log(`Listening on http://localhost:${PORT}`);
         console.log(`=================================`);
     });

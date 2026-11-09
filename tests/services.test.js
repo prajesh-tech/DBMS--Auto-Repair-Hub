@@ -1,5 +1,4 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
 
 jest.mock('../src/config/database', () => ({
     query: jest.fn(),
@@ -9,15 +8,12 @@ jest.mock('../src/config/database', () => ({
 
 const db = require('../src/config/database');
 const app = require('../src/server');
-const { JWT_SECRET } = require('../src/config/env');
+const { authHeaders, mockVerifiedUser, clearUserCache, USERS } = require('./helpers');
 
 describe('Services API & Work Order RBAC Tests', () => {
-    const adminToken = jwt.sign({ user_id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
-    const staffToken = jwt.sign({ user_id: 2, username: 'staff1', role: 'staff' }, JWT_SECRET, { expiresIn: '1h' });
-    const mechanicToken = jwt.sign({ user_id: 3, username: 'tech1', role: 'mechanic' }, JWT_SECRET, { expiresIn: '1h' });
-
     beforeEach(() => {
         jest.clearAllMocks();
+        clearUserCache();
     });
 
     afterAll(async () => {
@@ -30,13 +26,14 @@ describe('Services API & Work Order RBAC Tests', () => {
     });
 
     it('should fetch service list for authenticated mechanic or staff', async () => {
+        mockVerifiedUser(db, USERS.mechanic);
         db.query
             .mockResolvedValueOnce([[{ job_id: 1, description: 'Brake Inspection', status: 'In Progress', total_cost: 150.00 }]])
             .mockResolvedValueOnce([[{ total: 1 }]]);
 
         const res = await request(app)
             .get('/api/services')
-            .set('Authorization', `Bearer ${mechanicToken}`);
+            .set(authHeaders(USERS.mechanic));
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
@@ -44,9 +41,11 @@ describe('Services API & Work Order RBAC Tests', () => {
     });
 
     it('should reject service job creation with negative total_cost', async () => {
+        mockVerifiedUser(db, USERS.admin);
+
         const res = await request(app)
             .post('/api/services')
-            .set('Authorization', `Bearer ${adminToken}`)
+            .set(authHeaders(USERS.admin, { mutating: true }))
             .send({
                 car_id: 1,
                 job_date: '2026-11-01',
@@ -60,13 +59,14 @@ describe('Services API & Work Order RBAC Tests', () => {
     });
 
     it('should allow admin/staff to create a service job', async () => {
+        mockVerifiedUser(db, USERS.staff);
         db.query
-            .mockResolvedValueOnce([[{ car_id: 1 }]]) // Car exists
-            .mockResolvedValueOnce([{ insertId: 12 }]); // Insert job
+            .mockResolvedValueOnce([[{ car_id: 1 }]])
+            .mockResolvedValueOnce([{ insertId: 12 }]);
 
         const res = await request(app)
             .post('/api/services')
-            .set('Authorization', `Bearer ${staffToken}`)
+            .set(authHeaders(USERS.staff, { mutating: true }))
             .send({
                 car_id: 1,
                 job_date: '2026-11-05',
@@ -81,21 +81,24 @@ describe('Services API & Work Order RBAC Tests', () => {
     });
 
     it('should forbid mechanic from deleting a service job (RBAC 403)', async () => {
+        mockVerifiedUser(db, USERS.mechanic);
+
         const res = await request(app)
             .delete('/api/services/12')
-            .set('Authorization', `Bearer ${mechanicToken}`);
+            .set(authHeaders(USERS.mechanic, { mutating: true }));
 
         expect(res.statusCode).toBe(403);
     });
 
     it('should allow mechanic to update job status and notes', async () => {
+        mockVerifiedUser(db, USERS.mechanic);
         db.query
-            .mockResolvedValueOnce([[{ job_id: 12, status: 'In Progress' }]]) // Job exists
-            .mockResolvedValueOnce([{ affectedRows: 1 }]); // Update query
+            .mockResolvedValueOnce([[{ job_id: 12, status: 'In Progress' }]])
+            .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
         const res = await request(app)
             .put('/api/services/12')
-            .set('Authorization', `Bearer ${mechanicToken}`)
+            .set(authHeaders(USERS.mechanic, { mutating: true }))
             .send({
                 status: 'Completed',
                 description: 'Work completed and road tested.'

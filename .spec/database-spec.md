@@ -5,7 +5,9 @@ The database uses InnoDB engine with full Foreign Key enforcement (`ON DELETE CA
 
 ## 2. Entity Relationship Summary
 ```
-[User] (user_id PK, username UNIQUE, password_hash, role)
+[User] (user_id PK, username UNIQUE, password_hash, role ENUM admin|staff|mechanic, must_change_password)
+   │
+   └──< [RefreshToken] (jti PK, user_id FK, expires_at, revoked_at)
 
 [Customer] 1 ───< N [Car] (car_id PK, vin UNIQUE, customer_id FK)
                       │
@@ -21,8 +23,14 @@ The database uses InnoDB engine with full Foreign Key enforcement (`ON DELETE CA
                   [Employee] (employee_id PK, name, role, salary)
 ```
 
-## 3. Performance Indexes
+## 3. Auth-related columns
+- `User.must_change_password`: BOOLEAN NOT NULL DEFAULT FALSE — forced password change after seed/admin create.
+- `RefreshToken`: stores refresh JWT `jti` values for rotation and revocation.
+
+## 4. Performance Indexes
 - `idx_car_customer`: `Car(customer_id)`
 - `idx_service_car`: `ServiceJob(car_id)`
 - `idx_service_employee`: `ServiceJob(employee_id)`
 - `idx_service_status`: `ServiceJob(status)`
+- `idx_refresh_user`: `RefreshToken(user_id)`
+- `idx_refresh_expires`: `RefreshToken(expires_at)`

@@ -22,7 +22,7 @@ The application features a complete redesign aligning with the **Fidelity Modern
 
 - **Backend**: Node.js, Express.js (MVC Architecture)
 - **Database**: MariaDB / MySQL (`mysql2/promise` connection pool with transactions)
-- **Authentication**: Dual-Token JWT (15m Access + 7d Refresh in `HttpOnly`, `SameSite=Strict` cookies) & `bcryptjs`
+- **Authentication**: Dual-Token JWT (15m Access + 7d Refresh in `HttpOnly`, `SameSite=Strict` cookies), server-side refresh revocation, double-submit CSRF, & `bcryptjs` (cost 12)
 - **Frontend**: Modern Vanilla HTML5, Fidelity Modern Glassmorphism CSS (Google Inter font), JavaScript (Async/Fetch)
 - **Analytics**: Chart.js Interactive Timeframe Visualizations matching the Fidelity Modern palette
 - **PDF Generation**: PDFKit
@@ -32,7 +32,7 @@ The application features a complete redesign aligning with the **Fidelity Modern
 
 ## 🛠 Features
 
-- **🔐 Server-Side JWT Cookie Security**: `HttpOnly`, `SameSite=Strict` dual-token authentication with automatic token rotation, CSRF protection, and zero `localStorage` token exposure.
+- **🔐 Server-Side JWT Cookie Security**: `HttpOnly`, `SameSite=Strict` dual-token authentication with DB-backed refresh rotation/revocation, double-submit CSRF (`csrf_token` cookie + `X-CSRF-Token` header), admin-only registration, forced password change for seeded users, and zero token exposure in JSON bodies or URLs.
 - **👥 Multi-Role User Access Control**: Granular UI rendering and backend authorization paths tailored for `Admin`, `Staff`, and `Mechanic` profiles.
 - **📦 Automated Inventory Deduction & Restoration**: MySQL transactions automatically decrement stock when parts are assigned to a service job, block zero-stock assignments, and restore inventory upon job deletion or part unlinking.
 - **📊 Standalone Financial Analytics**: Dedicated **📊 Analytics** module (`analytics.html`) with timeframe filters (`Today`, `This Week`, `This Month`, `This Year`, `All Time`), Parts vs. Labor revenue breakdown, and Chart.js trend curves.
@@ -117,41 +117,24 @@ Auto_Repair_Hub/
 - Node.js (v18+)
 - MySQL or MariaDB Server running locally
 
-### 2. Database Migration Setup
-Log into MySQL / MariaDB and execute the schema script to create tables and seed default data:
+### 2. Environment Setup
+Copy `.env.example` to `.env` and fill in real values (JWT secrets, DB credentials, `SEED_PASSWORD`, `ALLOWED_ORIGINS`, `COOKIE_SECURE`, `TRUST_PROXY`). There are no default JWT secrets or `root`/`root` DB credentials outside test mode.
+
+### 3. Database Migration Setup
+With MariaDB/MySQL running and `.env` configured (including `SEED_PASSWORD`):
 
 ```bash
-mysql -u root -proot < database/schema.sql
+npm run seed
 ```
 
-### 3. Environment Setup
-Verify `.env` configuration:
-
-```env
-PORT=3000
-DB_HOST=127.0.0.1
-DB_USER=root
-DB_PASSWORD=root
-DB_NAME=auto_repair_hub
-JWT_SECRET=auto_repair_hub_jwt_secret_key_2026_super_secure
-JWT_REFRESH_SECRET=auto_repair_hub_jwt_refresh_secret_key_2026_super_secure
-ALLOWED_ORIGINS=http://localhost:3000
-```
+This applies `database/schema.sql` and creates `admin`, `staff`, and `mechanic` users. The seed password is never printed; those users must change password on first login (`must_change_password`).
 
 ### 4. Start the Application
-Run the start command:
-
 ```bash
 npm start
 ```
 
-Open your browser and navigate to:
-**[http://localhost:3000/login.html](http://localhost:3000/login.html)**
-
-### Seeded Database Logins (Strict bcrypt verification, no backdoor bypass):
-- **Admin**: Username `admin` | Password `Admin@123`
-- **Staff**: Username `staff` | Password `Admin@123`
-- **Mechanic**: Username `mechanic` | Password `Admin@123`
+Open **[http://localhost:3000/login.html](http://localhost:3000/login.html)**.
 
 ---
 

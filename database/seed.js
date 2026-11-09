@@ -1,9 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
-const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME } = require('../src/config/env');
+const bcrypt = require('bcryptjs');
+const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, BCRYPT_ROUNDS } = require('../src/config/env');
 
 async function seedDatabase() {
+    const seedPassword = process.env.SEED_PASSWORD;
+    if (!seedPassword || String(seedPassword).trim() === '') {
+        console.error('FATAL: SEED_PASSWORD environment variable is required to seed users.');
+        console.error('Set SEED_PASSWORD in .env (never commit the real value), then re-run npm run seed.');
+        process.exit(1);
+    }
+
     console.log('Connecting to database server...');
     let connection;
     try {
@@ -21,17 +29,27 @@ async function seedDatabase() {
         console.log(`Executing schema & seed script on database: ${DB_NAME}...`);
         await connection.query(sql);
 
-        console.log('✅ Database schema and seed data loaded successfully!');
-        console.log('========================================================');
-        console.log('Default Seeded User Credentials:');
-        console.log('  👑 Admin:    username: admin    | password: Admin@123');
-        console.log('  💼 Staff:    username: staff    | password: Admin@123');
-        console.log('  👨‍🔧 Mechanic: username: mechanic | password: Admin@123');
-        console.log('========================================================');
+        const passwordHash = await bcrypt.hash(seedPassword, BCRYPT_ROUNDS);
+        const users = [
+            ['admin', 'admin'],
+            ['staff', 'staff'],
+            ['mechanic', 'mechanic']
+        ];
+
+        for (const [username, role] of users) {
+            await connection.query(
+                'INSERT INTO User (username, password_hash, role, must_change_password) VALUES (?, ?, ?, TRUE)',
+                [username, passwordHash, role]
+            );
+        }
+
+        console.log('Database schema and seed data loaded successfully.');
+        console.log('Seeded users: admin, staff, mechanic (must change password on first login).');
+        console.log('Password was taken from SEED_PASSWORD and is not printed.');
     } catch (err) {
-        console.error('❌ Database migration failed:', err.message);
+        console.error('Database migration failed:', err.message);
         if (err.code === 'ECONNREFUSED') {
-            console.error('👉 Make sure MariaDB/MySQL is running: sudo service mariadb start');
+            console.error('Make sure MariaDB/MySQL is running: sudo service mariadb start');
         }
         process.exit(1);
     } finally {
@@ -40,4 +58,3 @@ async function seedDatabase() {
 }
 
 seedDatabase();
-

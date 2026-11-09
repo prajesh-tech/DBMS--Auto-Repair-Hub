@@ -9,6 +9,12 @@
     "seed": "node database/seed.js",
     "test": "jest --detectOpenHandles --forceExit"
   },
+  "jest": {
+    "setupFiles": [
+      "<rootDir>/tests/setupEnv.js"
+    ],
+    "testEnvironment": "node"
+  },
   "keywords": [
     "auto-repair",
     "express",

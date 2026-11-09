@@ -141,7 +141,7 @@
             </div>
 
             <!-- Authentication Form -->
-            <form class="flex flex-col space-y-4" id="authForm" onsubmit="handleAuthSubmit(event)">
+            <form class="flex flex-col space-y-4" id="authForm">
                 <!-- Work Email / Username Field -->
                 <div class="space-y-1.5">
                     <label for="userField" class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Work Email / Username</label>
@@ -159,18 +159,10 @@
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none transition-colors duration-200">lock</span>
                         <input class="w-full bg-surface-container/60 hover:bg-surface-container focus:bg-surface-container-lowest text-on-surface text-sm rounded-xl pl-11 pr-11 py-3 outline-none transition-all placeholder:text-outline/70 border border-outline-variant/40 focus:border-secondary focus:shadow-md focus:shadow-secondary/10" id="passwordField" placeholder="Enter password" required="" type="password" autocomplete="current-password"/>
-                        <button aria-label="Toggle password visibility" class="absolute right-3.5 text-outline hover:text-on-surface p-1 rounded-md transition-colors" id="togglePasswordBtn" onclick="togglePasswordVisibility()" type="button">
+                        <button aria-label="Toggle password visibility" class="absolute right-3.5 text-outline hover:text-on-surface p-1 rounded-md transition-colors" id="togglePasswordBtn" type="button">
                             <span class="material-symbols-outlined text-[20px]" id="eyeIcon">visibility</span>
                         </button>
                     </div>
-                </div>
-
-                <!-- Device Persistence -->
-                <div class="flex items-center justify-between pt-1">
-                    <label class="flex items-center space-x-2.5 cursor-pointer select-none">
-                        <input checked="" class="w-4 h-4 rounded text-secondary focus:ring-0 cursor-pointer accent-secondary" type="checkbox"/>
-                        <span class="text-xs text-on-surface-variant font-medium">Remember terminal</span>
-                    </label>
                 </div>
 
                 <!-- Primary CTA Button -->
@@ -180,24 +172,6 @@
                     <span class="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
                 </button>
             </form>
-
-            <!-- Alternative Quick Role Sign-In -->
-            <div class="relative my-6 flex items-center justify-center">
-                <div class="w-full h-px bg-surface-container-high"></div>
-                <span class="absolute bg-surface-container-lowest px-3 text-[11px] uppercase tracking-wider text-outline font-semibold">Or quick role preset</span>
-            </div>
-
-            <!-- Instant Role Presets -->
-            <div class="grid grid-cols-2 gap-2.5">
-                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('admin', 'Admin@123')" type="button">
-                    <span class="material-symbols-outlined text-secondary text-[18px]">shield_person</span>
-                    <span class="text-xs font-semibold">Admin</span>
-                </button>
-                <button class="flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-surface-container/70 hover:bg-surface-container text-on-surface transition-all active:scale-[0.98] border border-outline-variant/30 cursor-pointer" onclick="fillRole('mechanic', 'Admin@123')" type="button">
-                    <span class="material-symbols-outlined text-tertiary text-[18px]">build</span>
-                    <span class="text-xs font-semibold">Mechanic</span>
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -206,79 +180,85 @@
 <script src="js/toast.js"></script>
 <script src="js/api.js"></script>
 <script>
-    if (API.getUser()) {
-        window.location.href = 'index.html';
-    }
-
-    function togglePasswordVisibility() {
-        const pwdInput = document.getElementById('passwordField');
-        const eyeIcon = document.getElementById('eyeIcon');
-        if (pwdInput.type === 'password') {
-            pwdInput.type = 'text';
-            eyeIcon.textContent = 'visibility_off';
-        } else {
-            pwdInput.type = 'password';
-            eyeIcon.textContent = 'visibility';
-        }
-    }
-
-    function fillRole(username, password) {
-        const user = document.getElementById('userField');
-        const pass = document.getElementById('passwordField');
-        user.value = username;
-        pass.value = password;
-        user.classList.add('bg-secondary-fixed/40');
-        setTimeout(() => user.classList.remove('bg-secondary-fixed/40'), 400);
-        Toast.info(`Loaded ${username} credentials`);
-    }
-
-    async function handleAuthSubmit(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const originalText = btnText.textContent;
-        const username = document.getElementById('userField').value.trim();
-        const password = document.getElementById('passwordField').value.trim();
-
-        if (!username || !password) {
-            Toast.error('Please enter username and password');
+    document.addEventListener('DOMContentLoaded', () => {
+        if (API.getUser() && !API.getUser().must_change_password) {
+            window.location.href = 'index.html';
             return;
         }
 
-        try {
-            btn.disabled = true;
-            btnText.textContent = 'Signing in...';
-            btn.classList.add('opacity-85');
-
-            const res = await API.post('/api/auth/login', { username, password });
-
-            btnText.textContent = 'Handshake Established!';
-            btn.classList.remove('from-secondary', 'to-secondary', 'via-secondary-container');
-            btn.classList.add('bg-tertiary');
-
-            if (res.user) {
-                API.setUser(res.user);
-            }
-            Toast.success('Login Successful! Entering Hub...');
-
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 600);
-
-        } catch (err) {
-            let msg = err.message || 'Authentication failed';
-            if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
-                msg = 'Database offline: start MariaDB via "sudo service mariadb start"';
-            } else if (password === '1234') {
-                msg = 'Backdoor "1234" removed for security. Use "Admin@123"';
-            }
-            Toast.error(msg);
-            btnText.textContent = originalText;
-            btn.disabled = false;
-            btn.classList.remove('opacity-85', 'bg-tertiary');
-            btn.classList.add('bg-gradient-to-r', 'from-secondary', 'via-secondary-container', 'to-secondary');
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                const pwdInput = document.getElementById('passwordField');
+                const eyeIcon = document.getElementById('eyeIcon');
+                if (pwdInput.type === 'password') {
+                    pwdInput.type = 'text';
+                    eyeIcon.textContent = 'visibility_off';
+                } else {
+                    pwdInput.type = 'password';
+                    eyeIcon.textContent = 'visibility';
+                }
+            });
         }
-    }
+
+        const form = document.getElementById('authForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const originalText = btnText.textContent;
+            const username = document.getElementById('userField').value.trim();
+            const password = document.getElementById('passwordField').value;
+
+            if (!username || !password) {
+                Toast.error('Please enter username and password');
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btnText.textContent = 'Signing in...';
+                btn.classList.add('opacity-85');
+
+                const res = await API.post('/api/auth/login', { username, password });
+
+                btnText.textContent = 'Signed in';
+                if (res.user) {
+                    API.setUser(res.user);
+                }
+
+                if (res.user && res.user.must_change_password) {
+                    Toast.info('Please change your password to continue');
+                    API.showChangePasswordModal();
+                    const overlay = document.getElementById('changePasswordOverlay');
+                    const observer = new MutationObserver(() => {
+                        if (!document.getElementById('changePasswordOverlay')) {
+                            observer.disconnect();
+                            window.location.href = 'index.html';
+                        }
+                    });
+                    if (overlay) observer.observe(document.body, { childList: true });
+                    btn.disabled = false;
+                    btnText.textContent = originalText;
+                    return;
+                }
+
+                Toast.success('Login successful');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 400);
+            } catch (err) {
+                let msg = err.message || 'Authentication failed';
+                if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+                    msg = 'Database offline: start MariaDB via "sudo service mariadb start"';
+                }
+                Toast.error(msg);
+                btnText.textContent = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-85');
+            }
+        });
+    });
 </script>
 </body>
 </html>
